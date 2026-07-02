@@ -14,8 +14,8 @@ const MONTHLY_PLANS = [
     cta: 'Get Started Free', popular: false,
   },
   {
-    name: 'Pro', price: '50', desc: 'Accelerate your preparation',
-    features: ['Everything in Free', 'Unlimited storage', 'Advanced analytics', 'Priority support', 'Direct file downloads across devices', 'Custom study insights'],
+    name: 'Pro', price: '30', desc: 'Accelerate your preparation',
+    features: ['Everything in Free', 'AI Assistant – unlimited doubt solving & guidance', 'Unlimited storage', 'Advanced analytics', 'Priority support', 'Direct file downloads across devices', 'Custom study insights'],
     cta: 'Subscribe to Pro', popular: true,
   },
 ]
@@ -27,8 +27,8 @@ const YEARLY_PLANS = [
     cta: 'Get Started Free', popular: false,
   },
   {
-    name: 'Pro', price: '500', desc: 'Best value — 2 months free',
-    features: ['Everything in Free', 'Unlimited storage', 'Advanced analytics', 'Priority support', 'Direct file downloads across devices', 'Custom study insights', 'Early access to new features'],
+    name: 'Pro', price: '300', desc: 'Best value — 2 months free',
+    features: ['Everything in Free', 'AI Assistant – unlimited doubt solving & guidance', 'Unlimited storage', 'Advanced analytics', 'Priority support', 'Direct file downloads across devices', 'Custom study insights', 'Early access to new features'],
     cta: 'Subscribe Yearly', popular: true,
   },
 ]

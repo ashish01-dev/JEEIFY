@@ -26,9 +26,9 @@ Everything syncs to the cloud so you can study across devices seamlessly.`,
 - Progress dashboard and daily logs
 - Cloud sync across devices
 
-**Pro Plan** — ₹50/month
+**Pro Plan** — ₹30/month
 - Everything in Free, plus:
-  - **AI Tutor** — unlimited doubt-solving, concept explanations, and personalized guidance
+  - **AI Assistant** — unlimited doubt-solving, concept explanations, and personalized guidance
   - **Advanced analytics** — mock test analysis, error tracking, pace optimization
   - **PYQ library** — full access to previous year questions with solutions
   - **Formula repository** — upload and organize formula sheets
@@ -118,7 +118,7 @@ Your data syncs securely across devices with end-to-end encryption. No data shar
 **4. Built for JEE Specifically**
 Every feature is designed around the JEE curriculum, pattern, and timeline. No generic study tools — everything is calibrated for JEE Main & Advanced.
 
-**5. Pro at ₹50/month**
+**5. Pro at ₹30/month**
 Less than the cost of a coffee — unlimited AI tutoring, advanced analytics, PYQ library, and more.`,
   },
   {
@@ -134,7 +134,7 @@ No credit card required to start. The Free plan gives you full access to the syl
   },
   {
     keywords: ['pro features', 'ai tutor', 'ai assistant', 'ai features', 'ai capabilities'],
-    answer: `The **AI Tutor** (Pro feature, ₹50/month) is your personal JEE mentor:
+    answer: `The **AI Assistant** (Pro feature, ₹30/month) is your personal JEE mentor:
 
 **🎓 Concept Teaching** — Ask "Explain Faraday's Law" and get a clear, step-by-step explanation with visual examples
 
@@ -172,7 +172,7 @@ Read our full [Privacy Policy](/privacy) and [Terms of Service](/terms) for deta
     answer: `Here are answers to frequently asked questions:
 
 **Q: Is there a free trial for Pro?**
-A: You can use the Free plan indefinitely. When you're ready, Pro is ₹50/month with a 7-day money-back guarantee.
+A: You can use the Free plan indefinitely. When you're ready, Pro is ₹30/month with a 7-day money-back guarantee.
 
 **Q: Can I use JEEIFY offline?**
 A: Most core features (tracker, timer, timetable) work offline. Cloud sync happens when you're back online.
