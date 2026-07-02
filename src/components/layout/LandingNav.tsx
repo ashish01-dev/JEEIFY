@@ -144,8 +144,7 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
             <>
               <Link href="/auth?mode=login" className="hidden md:inline text-[12px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: 0.65, color: 'var(--c-text)' }}>Sign In</Link>
               <Link href="/auth?mode=signup"
-                className="flex items-center gap-1.5 text-white text-[12px] font-medium rounded-full px-3 py-1.5 transition-all duration-200 hover:-translate-y-[0.5px] hover:brightness-110 flex-shrink-0"
-                style={{ background: 'var(--c-btn-primary)', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+                className="btn-primary text-[12px] px-3 py-1.5 rounded-full flex-shrink-0">
                 <span className="w-4 h-4 rounded-full bg-white flex items-center justify-center">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />
@@ -206,8 +205,7 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
             </button>
           ) : (
             <Link href="/auth?mode=signup" onClick={() => setMenuOpen(false)}
-              className="inline-flex items-center gap-3 text-white text-[13px] font-medium rounded-[40px] px-[16px] py-[5px]"
-              style={{ background: 'var(--c-btn-primary)', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+              className="btn-primary text-[13px] px-[16px] py-[5px] rounded-[40px]">
               <span className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 18l6-6-6-6" />

@@ -84,7 +84,7 @@ export default function PricingPage() {
       {/* Hero */}
       <div className="flex flex-col items-center justify-center text-center px-5 py-20 md:py-28 relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full blur-[100px] opacity-25 pointer-events-none" style={{ background: 'var(--c-blue)' }} />
-        <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-4" style={{ color: 'var(--c-muted)' }}>Pricing</p>
+        <p className="section-eyebrow mb-4">Pricing</p>
         <h1 className="text-[clamp(36px,5vw,56px)] font-medium leading-[1.05] tracking-[-2px]" style={{ color: 'var(--c-text)' }}>
           Choose your<span className="text-[var(--c-blue)]"> plan.</span>
         </h1>
@@ -112,8 +112,7 @@ export default function PricingPage() {
         <div className="grid md:grid-cols-2 gap-6 max-w-[650px] mx-auto">
           {plans.map((plan, i) => (
             <div key={plan.name} onMouseEnter={() => setHoveredPlan(i)} onMouseLeave={() => setHoveredPlan(null)}
-              className="rounded-[18px] px-[28px] py-[28px] transition-all duration-200 relative" style={{
-                background: 'var(--c-card)',
+              className="card-base px-[28px] py-[28px] relative" style={{
                 border: plan.popular ? '1px solid var(--c-blue)' : '1px solid var(--c-border-card)',
                 boxShadow: hoveredPlan === i ? 'var(--c-shadow-hover)' : 'var(--c-shadow)',
                 transform: hoveredPlan === i ? 'translateY(-3px)' : 'translateY(0)',
@@ -145,21 +144,19 @@ export default function PricingPage() {
               </ul>
               {plan.price === '0' && user?.isPro ? (
                 <div className="w-full py-3 text-[13px] font-medium rounded-[40px] text-center"
-                  style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', color: 'var(--c-caption)', cursor: 'default' }}>
+                  style={{ border: '1px solid var(--c-border-card)', color: 'var(--c-caption)', cursor: 'default', background: 'var(--c-card)' }}>
                   N/A
                 </div>
               ) : plan.price !== '0' && user?.isPro ? (
                 <div className="w-full py-3 text-[13px] font-medium rounded-[40px] text-center"
-                  style={{ background: 'var(--c-card)', border: '1px solid var(--c-green)', color: 'var(--c-green)' }}>
+                  style={{ border: '1px solid var(--c-green)', color: 'var(--c-green)', background: 'var(--c-card)' }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline mr-1.5 -mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
                   Already Pro
                 </div>
               ) : (
                 <button onClick={() => handleSubscribe(plan.price)} disabled={loading}
-                  className="w-full py-3 text-[13px] font-medium rounded-[40px] text-white text-center transition-all duration-300"
+                  className="w-full py-3 text-[13px] font-medium rounded-[40px] text-white text-center transition-all duration-300 btn-primary justify-center"
                   style={{
-                    background: 'var(--c-btn-primary)',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
                     cursor: loading ? 'default' : 'pointer',
                     opacity: loading ? 0 : 1,
                     transform: loading ? 'translateY(8px)' : 'translateY(0)',
@@ -186,9 +183,9 @@ export default function PricingPage() {
       {/* Testimonials */}
       <div className="max-w-[1100px] mx-auto px-5 pb-24" style={{ contentVisibility: 'auto' }}>
         <div className="text-center mb-16">
-          <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-3" style={{ color: 'var(--c-muted)' }}>Testimonials</p>
+          <p className="section-eyebrow mb-3">Testimonials</p>
           <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>
-            How Pro helps<span className="text-[#888]"> real students</span>
+            How Pro helps<span className="text-[var(--c-muted)]"> real students</span>
           </h2>
           <p className="text-[14px] mt-4 max-w-md mx-auto" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
             Hear from JEE aspirants who upgraded their prep with Pro features.
@@ -196,9 +193,7 @@ export default function PricingPage() {
         </div>
         <div className="grid md:grid-cols-3 gap-4">
           {TESTIMONIALS.map(t => (
-            <div key={t.name} className="rounded-[18px] px-[22px] py-[24px] transition-all duration-200" style={{
-              background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
-            }}>
+            <div key={t.name} className="card-base px-[22px] py-[24px]">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--c-tag)', color: 'var(--c-blue)' }}>
                   {t.name.charAt(0)}
@@ -231,7 +226,7 @@ export default function PricingPage() {
             { q: 'What payment methods are accepted?', a: 'We accept all major credit/debit cards, UPI, net banking, and popular wallets through Razorpay.' },
             { q: 'Can I switch from monthly to yearly?', a: 'Absolutely. You can switch anytime — we\'ll prorate the remaining balance.' },
           ].map((faq, i) => (
-            <details key={i} className="rounded-[14px] px-5 py-4 group" style={{ border: '1px solid var(--c-border-card)', background: 'var(--c-card)' }}>
+            <details key={i} className="rounded-[14px] px-5 py-4 group card-base" style={{ border: '1px solid var(--c-border-card)' }}>
               <summary className="text-sm font-semibold cursor-pointer list-none flex items-center justify-between" style={{ color: 'var(--c-text)' }}>
                 {faq.q}
                 <svg className="w-4 h-4 transition-transform group-open:rotate-180" style={{ color: 'var(--c-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>

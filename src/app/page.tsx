@@ -17,10 +17,10 @@ const FEATURES = [
 
 const FAQS = [
   { q: 'Is JEEIFY really free?', a: 'Yes! The Free tier includes full syllabus tracking, timetable planner, Pomodoro timer, test score logging, activity journal, and 500 MB of storage — completely free, no credit card required.' },
-  { q: 'What happens when I hit the 500 MB storage limit?', a: 'The Free version caps at 500 MB of storage. Upgrade to Pro ($9/month) for 5 GB storage, 1-on-1 live support, advanced analytics, faster support resolution, and priority access to new features.' },
+  { q: 'What happens when I hit the 500 MB storage limit?', a: 'The Free version caps at 500 MB of storage. Upgrade to Pro for 5 GB storage, advanced analytics, faster support, and priority access to new features.' },
   { q: 'How does the pace tracking algorithm work?', a: 'It analyzes your daily chapter completions, study hours, and test scores against your exam date and syllabus size. It determines whether you\'re ahead, on track, or behind — and adjusts recommendations accordingly.' },
   { q: 'Can I use JEEIFY on my phone?', a: 'Absolutely. The entire app is fully responsive and works seamlessly on mobile, tablet, and desktop. The mobile layout includes a compact bottom nav bar for easy one-handed use.' },
-  { q: 'How is my data stored and synced?', a: 'All your progress is stored locally via IndexedDB and synced to your Google account through Supabase. Your data stays safe and accessible across devices.' },
+  { q: 'How is my data stored and synced?', a: 'All your progress is stored locally via IndexedDB and synced to your account through Supabase. Your data stays safe and accessible across devices.' },
   { q: 'Can I collaborate with study partners?', a: 'The Teams plan includes collaborative dashboards, shared progress tracking, and unlimited storage — perfect for study groups and coaching centers.' },
 ]
 
@@ -30,6 +30,20 @@ const STEPS = [
   { step: '03', title: 'Track Daily', desc: 'Log chapters, questions, tests, and pomodoros. Watch your progress compound daily.' },
   { step: '04', title: 'Ace the Exam', desc: 'Stay on track with smart recommendations and reach your target with confidence.' },
 ]
+
+const springStagger = (i: number) => ({
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.5, delay: i * 0.08, ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number] },
+})
+
+const sectionFade = {
+  initial: { opacity: 0, y: 40 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-80px' },
+  transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+}
 
 export default function LandingPage() {
   const { user } = useUser()
@@ -43,36 +57,57 @@ export default function LandingPage() {
     }
   }, [])
 
-  const fadeUp = {
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: '-80px' },
-    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
-  }
-
   return (
     <div className="min-h-screen" style={{ fontFamily: "'DM Sans', sans-serif", background: 'var(--c-bg-gradient)' }}>
       <LandingNav />
 
       {/* Hero */}
-      <motion.section {...fadeUp} className="flex flex-col items-center justify-center text-center px-5 py-24 md:py-32 relative">
+      <section className="flex flex-col items-center justify-center text-center px-5 py-24 md:py-32 relative overflow-hidden">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-[120px] opacity-30 pointer-events-none" style={{ background: 'var(--c-blue)' }} />
         <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full blur-[100px] opacity-20 pointer-events-none" style={{ background: 'var(--c-blue)' }} />
-        <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-6" style={{ color: 'var(--c-muted)' }}>JEE 2027 — Command Center</p>
-        <h1 className="text-[clamp(42px,7vw,72px)] font-medium leading-[1.05] tracking-[-2px] max-w-4xl" style={{ color: 'var(--c-text)' }}>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="section-eyebrow mb-6"
+        >
+          JEE 2027 — Command Center
+        </motion.p>
+        <motion.h1
+          initial={{ opacity: 0, y: 24, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+          className="text-[clamp(42px,7vw,72px)] font-medium leading-[1.05] tracking-[-2px] max-w-4xl"
+          style={{ color: 'var(--c-text)' }}
+        >
           Master your JEE prep<br />
           <span className="text-[var(--c-blue)] font-semibold">with purpose.</span>
-        </h1>
-        <p className="text-[15px] mt-5 max-w-lg" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-[15px] mt-5 max-w-lg"
+          style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}
+        >
           Track syllabus progress, optimize your timetable, analyze tests — a command center built for the systematic mind.
-        </p>
-        <p className="text-[clamp(15px,2vw,20px)] mt-6 font-medium" style={{ color: 'var(--c-text)' }}>
-          Built by a <span className="text-[var(--c-blue)]">Student</span><span className="text-[#888]">, for Students</span>
-        </p>
-        <div className="flex items-center gap-4 mt-8 flex-wrap justify-center">
-          <Link href="/auth?mode=signup"
-            className="flex items-center gap-2 text-white text-[14px] font-medium rounded-[40px] px-[22px] py-[8px] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-110"
-            style={{ background: 'var(--c-btn-primary)', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-[clamp(15px,2vw,20px)] mt-6 font-medium"
+          style={{ color: 'var(--c-text)' }}
+        >
+          Built by a <span className="text-[var(--c-blue)]">Student</span><span className="text-[var(--c-muted)]">, for Students</span>
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="flex items-center gap-4 mt-8 flex-wrap justify-center"
+        >
+          <Link href="/auth?mode=signup" className="btn-primary">
             <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18l6-6-6-6" />
@@ -80,72 +115,64 @@ export default function LandingPage() {
             </span>
             Start Free
           </Link>
-          <a href="#features"
-            className="text-[14px] font-medium rounded-[40px] px-[22px] py-[8px] transition-all duration-200 hover:-translate-y-[1px]"
-            style={{ color: 'var(--c-text-secondary)', border: '1px solid var(--c-border-input)' }}>Explore</a>
-        </div>
-      </motion.section>
+          <a href="#features" className="btn-secondary">Explore</a>
+        </motion.div>
+      </section>
 
       {/* Features */}
-      <motion.section {...fadeUp} id="features" className="px-5 py-24 md:py-32 max-w-[1100px] mx-auto">
+      <motion.section {...sectionFade} id="features" className="px-5 py-24 md:py-32 max-w-[1100px] mx-auto">
         <div className="text-center mb-16">
-          <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-3" style={{ color: 'var(--c-muted)' }}>Capabilities</p>
+          <p className="section-eyebrow mb-3">Capabilities</p>
           <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>
-            Everything you need.<span className="text-[#888]"> Nothing you don&apos;t.</span>
+            Everything you need.<span className="text-[var(--c-muted)]"> Nothing you don&apos;t.</span>
           </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-4">
-          {FEATURES.map(f => (
-            <div key={f.label} className="rounded-[18px] px-[22px] py-[24px] transition-all duration-200 hover:-translate-y-[2px]" style={{
-              background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)', willChange: 'transform',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--c-shadow-hover)' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--c-shadow)' }}>
+          {FEATURES.map((f, i) => (
+            <motion.div key={f.label} {...springStagger(i)} className="card-base px-[22px] py-[24px] hover:-translate-y-[2px]" style={{ willChange: 'transform' }}>
               <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--c-tag)' }}>
                 <span className="material-symbols-rounded" style={{ fontSize: 24, color: 'var(--c-text)' }}>{f.icon}</span>
               </div>
               <h3 className="text-[15px] font-semibold mb-1.5" style={{ color: 'var(--c-text)' }}>{f.label}</h3>
               <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-muted)' }}>{f.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </motion.section>
 
       {/* How It Works */}
-      <motion.section {...fadeUp} className="px-5 py-24 md:py-32 max-w-[1100px] mx-auto" style={{ contentVisibility: 'auto', containIntrinsicSize: '400px' }}>
+      <motion.section {...sectionFade} className="px-5 py-24 md:py-32 max-w-[1100px] mx-auto" style={{ contentVisibility: 'auto', containIntrinsicSize: '400px' }}>
         <div className="text-center mb-16">
-          <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-3" style={{ color: 'var(--c-muted)' }}>How It Works</p>
+          <p className="section-eyebrow mb-3">How It Works</p>
           <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>
-            From zero to<span className="text-[#888]"> hero.</span>
+            From zero to<span className="text-[var(--c-muted)]"> hero.</span>
           </h2>
           <p className="text-[14px] mt-4 max-w-md mx-auto" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
             Four simple steps to transform your preparation into a structured, trackable system.
           </p>
         </div>
         <div className="grid md:grid-cols-4 gap-4">
-          {STEPS.map(s => (
-            <div key={s.step} className="rounded-[18px] px-[22px] py-[24px] transition-all duration-200 hover:-translate-y-[2px]" style={{
-              background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)', willChange: 'transform',
-            }}>
+          {STEPS.map((s, i) => (
+            <motion.div key={s.step} {...springStagger(i)} className="card-base px-[22px] py-[24px] hover:-translate-y-[2px]" style={{ willChange: 'transform' }}>
               <div className="text-[32px] font-bold tracking-[-1px] mb-3" style={{ color: 'var(--c-blue)' }}>{s.step}</div>
               <h3 className="text-[15px] font-semibold mb-1.5" style={{ color: 'var(--c-text)' }}>{s.title}</h3>
               <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-muted)' }}>{s.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </motion.section>
 
       {/* FAQ */}
-      <motion.section {...fadeUp} className="px-5 py-24 md:py-32 max-w-[800px] mx-auto">
+      <motion.section {...sectionFade} className="px-5 py-24 md:py-32 max-w-[800px] mx-auto">
         <div className="text-center mb-12">
-          <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-3" style={{ color: 'var(--c-muted)' }}>FAQ</p>
-          <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>Got questions?<span className="text-[#888]"> We&apos;ve got answers.</span></h2>
+          <p className="section-eyebrow mb-3">FAQ</p>
+          <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>
+            Got questions?<span className="text-[var(--c-muted)]"> We&apos;ve got answers.</span>
+          </h2>
         </div>
         <div className="space-y-3">
           {FAQS.map((faq, i) => (
-            <div key={i} className="rounded-[18px] transition-all duration-200" style={{
-              background: 'var(--c-card)',
-              border: '1px solid var(--c-border-card)',
+            <div key={i} className="card-base transition-shadow duration-200" style={{
               boxShadow: openFaq === i ? '0 4px 20px rgba(0,0,0,0.06)' : 'var(--c-shadow)',
             }}>
               <button
@@ -153,7 +180,7 @@ export default function LandingPage() {
                 className="w-full flex items-center justify-between px-[22px] py-[16px] text-left"
               >
                 <span className="text-[14px] font-medium pr-4" style={{ color: 'var(--c-text)' }}>{faq.q}</span>
-                <span className="text-[#888] text-lg flex-shrink-0 transition-transform duration-200" style={{ transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                <span className="text-[var(--c-muted)] text-lg flex-shrink-0 transition-transform duration-200" style={{ transform: openFaq === i ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
               </button>
               <div className="overflow-hidden transition-all duration-300" style={{
                 maxHeight: openFaq === i ? '300px' : '0px',
@@ -169,24 +196,22 @@ export default function LandingPage() {
       </motion.section>
 
       {/* CTA */}
-      <motion.section {...fadeUp} className="px-5 py-24 md:py-32 text-center">
-        <p className="text-[13px] font-medium tracking-[0.15em] uppercase mb-4" style={{ color: 'var(--c-muted)' }}>Ready</p>
+      <motion.section {...sectionFade} className="px-5 py-24 md:py-32 text-center">
+        <p className="section-eyebrow mb-4">Ready</p>
         <h2 className="text-[clamp(32px,5vw,52px)] font-medium tracking-[-1.5px] mb-4" style={{ color: 'var(--c-text)' }}>
-          Ace JEE 2027.<br /><span style={{ color: 'var(--c-muted)' }}>Start today.</span>
+          Ace JEE 2027.<br /><span className="text-[var(--c-muted)]">Start today.</span>
         </h2>
         <p className="text-[14px] mb-8 max-w-md mx-auto" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
           Free. No credit card. Just your Google account and the determination to succeed.
         </p>
-        <Link href="/auth?mode=signup"
-          className="inline-flex items-center gap-2 text-white text-[14px] font-medium rounded-[40px] px-[24px] py-[10px] transition-all duration-200 hover:-translate-y-[1px] hover:brightness-110"
-          style={{ background: 'var(--c-btn-primary)', boxShadow: '0 4px 15px rgba(0,0,0,0.15)' }}>
-            <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </span>
-            Get Started Free
-          </Link>
+        <Link href="/auth?mode=signup" className="btn-primary">
+          <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </span>
+          Get Started Free
+        </Link>
       </motion.section>
 
       {/* Footer is rendered by layout.tsx */}
@@ -207,8 +232,7 @@ export default function LandingPage() {
             <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--c-text)' }}>Please sign in first</h2>
             <p className="text-sm mb-6" style={{ color: 'var(--c-muted)' }}>You need to be signed in to access your dashboard.</p>
             <Link href="/auth?mode=signup" onClick={() => setShowSigninPrompt(false)}
-              className="inline-block px-6 py-2.5 rounded-[40px] text-sm font-medium text-white transition-all"
-              style={{ background: 'var(--c-btn-primary)' }}>Sign In</Link>
+              className="btn-primary">Sign In</Link>
           </div>
         </div>
       )}
