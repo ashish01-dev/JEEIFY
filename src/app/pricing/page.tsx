@@ -6,9 +6,6 @@ import { getSupabase } from '@/lib/supabase'
 import LandingNav from '@/components/layout/LandingNav'
 import ProActivationPopup from '@/components/ProActivationPopup'
 import { useUser } from '@/lib/useUser'
-import { useSettingsStore } from '@/store/settingsStore'
-
-const ASTERISK_FEATURES = new Set(['Unlimited storage'])
 
 const MONTHLY_PLANS = [
   {
@@ -36,14 +33,7 @@ const YEARLY_PLANS = [
   },
 ]
 
-const TESTIMONIALS = [
-  { name: 'Neha G.', role: 'JEE 2027 Aspirant', text: 'Pro analytics showed me exactly which chapters I was weak in. My accuracy improved from 65% to 89% in 3 months.', rating: 5, avatar: '' },
-  { name: 'Aarav K.', role: 'JEE 2027 Aspirant', text: 'The file sync across devices is seamless. I study on my tablet and review on my phone — everything stays in sync.', rating: 5, avatar: '' },
-  { name: 'Sneha R.', role: 'JEE 2027 Aspirant', text: 'I switched from Free to Pro after a month. Unlimited storage means I never delete old test papers. Game changer.', rating: 5, avatar: '' },
-  { name: 'Rahul M.', role: 'JEE 2027 Aspirant', text: 'Priority support responds in minutes, not hours. When I had a sync issue, they fixed it before my next study session.', rating: 5, avatar: '' },
-  { name: 'Priya S.', role: 'JEE 2027 Aspirant', text: 'Custom study insights helped me realize I was spending too much time on topics I already knew. Now I focus better.', rating: 5, avatar: '' },
-  { name: 'Vikram P.', role: 'JEE 2027 Aspirant', text: 'The daily study planner alone is worth upgrading for. It auto-adjusts when you fall behind. Incredible tool.', rating: 5, avatar: '' },
-]
+const ASTERISK_FEATURES = new Set(['Unlimited storage'])
 
 export default function PricingPage() {
   const router = useRouter()
@@ -78,17 +68,16 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen pb-[80px]" style={{ fontFamily: "'DM Sans', sans-serif", background: 'var(--c-bg-gradient)' }}>
+    <div className="min-h-screen" style={{ fontFamily: "'DM Sans', sans-serif", background: 'var(--c-bg)' }}>
       <LandingNav active="pricing" />
 
       {/* Hero */}
-      <div className="flex flex-col items-center justify-center text-center px-5 py-20 md:py-28 relative">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full blur-[100px] opacity-25 pointer-events-none" style={{ background: 'var(--c-blue)' }} />
+      <div className="flex flex-col items-center text-center px-5 pt-28 md:pt-36 pb-16 relative">
         <p className="section-eyebrow mb-4">Pricing</p>
         <h1 className="text-[clamp(36px,5vw,56px)] font-medium leading-[1.05] tracking-[-2px]" style={{ color: 'var(--c-text)' }}>
-          Choose your<span className="text-[var(--c-blue)]"> plan.</span>
+          Choose your<span style={{ color: 'var(--c-blue)' }}> plan.</span>
         </h1>
-        <p className="text-[15px] mt-4 max-w-md" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
+        <p className="text-[15px] mt-4 max-w-md" style={{ color: 'var(--c-text-secondary)', lineHeight: 1.7 }}>
           Start free. Upgrade when you&apos;re ready to go deeper.
         </p>
 
@@ -112,7 +101,7 @@ export default function PricingPage() {
         <div className="grid md:grid-cols-2 gap-6 max-w-[650px] mx-auto">
           {plans.map((plan, i) => (
             <div key={plan.name} onMouseEnter={() => setHoveredPlan(i)} onMouseLeave={() => setHoveredPlan(null)}
-              className="card-base px-[28px] py-[28px] relative" style={{
+              className="card-base px-7 py-7 relative" style={{
                 border: plan.popular ? '1px solid var(--c-blue)' : '1px solid var(--c-border-card)',
                 boxShadow: hoveredPlan === i ? 'var(--c-shadow-hover)' : 'var(--c-shadow)',
                 transform: hoveredPlan === i ? 'translateY(-3px)' : 'translateY(0)',
@@ -138,7 +127,7 @@ export default function PricingPage() {
               <ul className="space-y-3 mb-8">
                 {plan.features.map(f => (
                   <li key={f} className="text-[13px] flex items-center gap-2" style={{ color: 'var(--c-text-secondary)' }}>
-                    <span className="text-[var(--c-blue)]">✓</span> {f}{ASTERISK_FEATURES.has(f) ? <sup className="text-[var(--c-muted)]">*</sup> : null}
+                    <span className="text-[var(--c-blue)] shrink-0">&#10003;</span> {f}{ASTERISK_FEATURES.has(f) ? <sup className="text-[var(--c-muted)]">*</sup> : null}
                   </li>
                 ))}
               </ul>
@@ -180,40 +169,6 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* Testimonials */}
-      <div className="max-w-[1100px] mx-auto px-5 pb-24" style={{ contentVisibility: 'auto' }}>
-        <div className="text-center mb-16">
-          <p className="section-eyebrow mb-3">Testimonials</p>
-          <h2 className="text-[clamp(28px,4vw,44px)] font-medium tracking-[-1.5px]" style={{ color: 'var(--c-text)' }}>
-            How Pro helps<span className="text-[var(--c-muted)]"> real students</span>
-          </h2>
-          <p className="text-[14px] mt-4 max-w-md mx-auto" style={{ color: 'var(--c-muted)', lineHeight: 1.7 }}>
-            Hear from JEE aspirants who upgraded their prep with Pro features.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4">
-          {TESTIMONIALS.map(t => (
-            <div key={t.name} className="card-base px-[22px] py-[24px]">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--c-tag)', color: 'var(--c-blue)' }}>
-                  {t.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="text-[14px] font-semibold" style={{ color: 'var(--c-text)' }}>{t.name}</div>
-                  <div className="text-[11px]" style={{ color: 'var(--c-muted)' }}>{t.role}</div>
-                </div>
-              </div>
-              <div className="flex gap-0.5 mb-3">
-                {Array.from({ length: t.rating }).map((_, ri) => (
-                  <svg key={ri} width="14" height="14" viewBox="0 0 24 24" fill="#eab308"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" /></svg>
-                ))}
-              </div>
-              <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-muted)' }}>&ldquo;{t.text}&rdquo;</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* FAQ */}
       <div className="max-w-[700px] mx-auto px-5 pb-24" style={{ contentVisibility: 'auto' }}>
         <div className="text-center mb-12">
@@ -226,12 +181,12 @@ export default function PricingPage() {
             { q: 'What payment methods are accepted?', a: 'We accept all major credit/debit cards, UPI, net banking, and popular wallets through Razorpay.' },
             { q: 'Can I switch from monthly to yearly?', a: 'Absolutely. You can switch anytime — we\'ll prorate the remaining balance.' },
           ].map((faq, i) => (
-            <details key={i} className="rounded-[14px] px-5 py-4 group card-base" style={{ border: '1px solid var(--c-border-card)' }}>
+            <details key={i} className="card-base px-5 py-4 group" style={{ border: '1px solid var(--c-border-card)' }}>
               <summary className="text-sm font-semibold cursor-pointer list-none flex items-center justify-between" style={{ color: 'var(--c-text)' }}>
                 {faq.q}
                 <svg className="w-4 h-4 transition-transform group-open:rotate-180" style={{ color: 'var(--c-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
               </summary>
-              <p className="text-[13px] mt-3 leading-relaxed" style={{ color: 'var(--c-muted)' }}>{faq.a}</p>
+              <p className="text-[13px] mt-3 leading-relaxed" style={{ color: 'var(--c-text-secondary)' }}>{faq.a}</p>
             </details>
           ))}
         </div>

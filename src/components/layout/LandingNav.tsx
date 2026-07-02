@@ -54,7 +54,7 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
 
   return (
     <nav className="sticky top-0 z-50 w-full pt-3 md:pt-4 px-4">
-      <div className="mx-auto max-w-[900px] flex items-center justify-between rounded-full px-3 md:px-5 py-2"
+      <div className="mx-auto max-w-[1100px] flex items-center justify-between rounded-[14px] px-4 md:px-6 py-2.5"
         style={{
           background: 'var(--c-navbar-bg)',
           backdropFilter: 'blur(16px)',
@@ -63,27 +63,27 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
           boxShadow: 'var(--c-shadow-nav)',
         }}>
         <Link href="/" className="flex items-center gap-[7px] flex-shrink-0">
-          <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" fetchPriority="high" style={{ height: 22, filter: 'var(--c-logo-filter)' }} />
-          <span className="text-[17px] font-bold tracking-[-0.2px]" style={{ color: 'var(--c-text)' }}>JEEIFY</span>
+          <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" fetchPriority="high" style={{ height: 20, filter: 'var(--c-logo-filter)' }} />
+          <span className="text-[16px] font-bold tracking-[-0.2px]" style={{ color: 'var(--c-text)' }}>JEEIFY</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-[13px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: active ? 0.65 : 1, color: 'var(--c-text)' }}>Home</Link>
-          <a href="#features" className="text-[13px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: 0.65, color: 'var(--c-text)' }}>Features</a>
-          <Link href="/pricing" className="text-[13px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: active === 'pricing' ? 1 : 0.65, color: active === 'pricing' ? 'var(--c-blue)' : 'var(--c-text)' }}>Pricing</Link>
-          <Link href="/about" className="text-[13px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: active === 'about' ? 1 : 0.65, color: active === 'about' ? 'var(--c-blue)' : 'var(--c-text)' }}>About</Link>
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="/" className="text-[14px] font-normal transition-all duration-200 hover:opacity-100" style={{ opacity: active ? 0.6 : 1, color: 'var(--c-text-secondary)' }}>Home</Link>
+          <a href="#features" className="text-[14px] font-normal transition-all duration-200 hover:opacity-100" style={{ opacity: 0.6, color: 'var(--c-text-secondary)' }}>Features</a>
+          <Link href="/pricing" className="text-[14px] font-normal transition-all duration-200 hover:opacity-100" style={{ opacity: active === 'pricing' ? 1 : 0.6, color: active === 'pricing' ? 'var(--c-text)' : 'var(--c-text-secondary)' }}>Pricing</Link>
+          <Link href="/about" className="text-[14px] font-normal transition-all duration-200 hover:opacity-100" style={{ opacity: active === 'about' ? 1 : 0.6, color: active === 'about' ? 'var(--c-text)' : 'var(--c-text-secondary)' }}>About</Link>
         </div>
 
         <div className="flex items-center gap-2">
           {loading ? null : (
           <>
-          <button onClick={toggleTheme} className="hidden md:flex w-7 h-7 rounded-full items-center justify-center transition-all hover:bg-black/[0.04]" style={{ cursor: 'pointer', color: 'var(--c-text)' }}>
+          <button onClick={toggleTheme} className="hidden md:flex w-8 h-8 rounded-full items-center justify-center transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06]" style={{ cursor: 'pointer', color: 'var(--c-text-secondary)' }}>
             {isDark ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="5.64" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
               </svg>
             )}
@@ -91,19 +91,19 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
           {user ? (
             <div ref={profileRef} className="relative" style={{ zIndex: 9999 }}>
               <button onClick={(e) => { e.stopPropagation(); setShowProfileDropdown(prev => !prev) }}
-                className="flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full transition-all hover:bg-black/[0.04]"
-                style={{ cursor: 'pointer', border: '1px solid var(--c-border-card)' }}>
-                <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center" style={{ background: user.avatar ? 'transparent' : 'var(--c-tag)' }}>
+                className="flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full transition-all hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                style={{ cursor: 'pointer', border: '1px solid var(--c-border)' }}>
+                <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center" style={{ background: user.avatar ? 'transparent' : 'var(--c-tag)' }}>
                   {user.avatar ? (
                     <img src={user.avatar} alt="" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
-                    <span className="text-[10px] font-bold" style={{ color: 'var(--c-muted)' }}>{user.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-[11px] font-bold" style={{ color: 'var(--c-muted)' }}>{user.name.charAt(0).toUpperCase()}</span>
                   )}
                 </div>
                 <span className="text-[12px] font-medium max-w-[90px] truncate hidden sm:block" style={{ color: 'var(--c-text)' }}>{user.name}</span>
               </button>
               {showProfileDropdown && (
-                <div className="absolute right-0 mt-2 w-56 rounded-[14px]" style={{ zIndex: 9999, background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                <div className="absolute right-0 mt-2 w-56 rounded-[12px]" style={{ zIndex: 9999, background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
                   <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>{user.name}</span>
@@ -118,21 +118,21 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
                     </div>
                   ) : (
                     <button onClick={(e) => { closeDropdown(e); router.push('/pricing') }}
-                      className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03]"
+                      className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
                       style={{ color: 'var(--c-text)' }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                       Upgrade to Pro
                     </button>
                   )}
                   <button onClick={(e) => { closeDropdown(e); router.push('/dashboard') }}
-                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03]"
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
                     style={{ color: 'var(--c-text)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     Go to Dashboard
                   </button>
                   <div className="h-[1px]" style={{ background: 'var(--c-border)' }} />
                   <button onClick={(e) => handleSignOut(e)}
-                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03]"
+                    className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm transition-colors hover:bg-black/[0.03] dark:hover:bg-white/[0.03]"
                     style={{ color: 'var(--c-red)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                     Sign Out
@@ -142,9 +142,8 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
             </div>
           ) : (
             <>
-              <Link href="/auth?mode=login" className="hidden md:inline text-[12px] font-normal hover:opacity-100 transition-opacity" style={{ opacity: 0.65, color: 'var(--c-text)' }}>Sign In</Link>
-              <Link href="/auth?mode=signup"
-                className="btn-primary text-[12px] px-3 py-1.5 rounded-full flex-shrink-0">
+              <Link href="/auth?mode=login" className="hidden md:inline text-[13px] font-normal transition-all duration-200 hover:opacity-100" style={{ opacity: 0.6, color: 'var(--c-text-secondary)' }}>Sign In</Link>
+              <Link href="/auth?mode=signup" className="btn-primary text-[12px] px-4 py-1.5 rounded-full flex-shrink-0">
                 <span className="w-4 h-4 rounded-full bg-white flex items-center justify-center">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 18l6-6-6-6" />

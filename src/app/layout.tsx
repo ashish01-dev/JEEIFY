@@ -208,7 +208,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23191919'/%3E%3Ccircle cx='74' cy='26' r='8' fill='%232383e2' opacity='0.25'/%3E%3Ctext x='50' y='66' text-anchor='middle' font-size='44' font-weight='800' font-family='system-ui,sans-serif' fill='white'%3EJ%3C/text%3E%3C/svg%3E" />
         <title>JEEIFY</title>
       </head>
-      <body className="min-h-screen" style={{ background: 'var(--c-bg-gradient)', color: 'var(--c-text)', fontFamily: "'DM Sans', sans-serif" }}>
+      <body className="min-h-screen" style={{ background: 'var(--c-bg)', color: 'var(--c-text)', fontFamily: "'DM Sans', sans-serif" }}>
         <Script id="theme-init" strategy="beforeInteractive">{`try{var t=localStorage.getItem('jee-theme');if(t==='light'){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light')}else if(t==='dark'){document.documentElement.classList.add('dark')}else{if(window.matchMedia('(prefers-color-scheme:light)').matches){document.documentElement.classList.remove('dark');document.documentElement.classList.add('light')}else{document.documentElement.classList.add('dark')}}}catch(e){document.documentElement.classList.add('dark')}`}</Script>
         <div className="flex flex-col min-h-screen">
           <div className="flex-1">
