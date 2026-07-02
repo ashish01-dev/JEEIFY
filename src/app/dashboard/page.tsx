@@ -231,6 +231,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── Gamification Bar ─── */}
+        {!settings.hideDashboardGamification && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4" data-tour="tour-gamification">
           <div className="rounded-[14px] px-4 py-3 flex items-center gap-3" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)' }}>
             <div className="flex items-center justify-center w-10 h-10 rounded-full text-lg" style={{ background: 'rgba(255,165,0,0.15)' }}>🔥</div>

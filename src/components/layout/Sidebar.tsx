@@ -11,20 +11,20 @@ import ChangelogPopup from '@/components/dashboard/ChangelogPopup'
 export const SIDEBAR_WIDTH = 260
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/ai', label: 'AI Assistant', icon: '🤖', badge: 'BETA' },
-  { href: '/syllabus', label: 'Syllabus', icon: '📚' },
-  { href: '/timetable', label: 'Timetable', icon: '📅' },
-  { href: '/progress', label: 'Progress', icon: '📈' },
-  { href: '/completion', label: 'Completion', icon: '✅' },
-  { href: '/pyq', label: 'PYQs', icon: '📝' },
-  { href: '/backlog', label: 'Backlog', icon: '📋' },
-  { href: '/activity', label: 'Journal', icon: '📓' },
-  { href: '/questions', label: 'Questions', icon: '❓' },
-  { href: '/tests', label: 'Tests', icon: '📝' },
-  { href: '/revision', label: 'Revision', icon: '🧠' },
-  { href: '/formula-vault', label: 'Formula Vault', icon: '📄' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/dashboard', label: 'Dashboard', icon: '📊', hideKey: null },
+  { href: '/ai', label: 'AI Assistant', icon: '🤖', badge: 'BETA' as const, hideKey: null },
+  { href: '/syllabus', label: 'Syllabus', icon: '📚', hideKey: 'hideSidebarSyllabus' as const },
+  { href: '/timetable', label: 'Timetable', icon: '📅', hideKey: 'hideSidebarTimetable' as const },
+  { href: '/progress', label: 'Progress', icon: '📈', hideKey: 'hideSidebarProgress' as const },
+  { href: '/completion', label: 'Completion', icon: '✅', hideKey: 'hideSidebarCompletion' as const },
+  { href: '/pyq', label: 'PYQs', icon: '📝', hideKey: 'hideSidebarPYQ' as const },
+  { href: '/backlog', label: 'Backlog', icon: '📋', hideKey: 'hideSidebarBacklog' as const },
+  { href: '/activity', label: 'Journal', icon: '📓', hideKey: 'hideSidebarJournal' as const },
+  { href: '/questions', label: 'Questions', icon: '❓', hideKey: 'hideSidebarQuestions' as const },
+  { href: '/tests', label: 'Tests', icon: '📝', hideKey: 'hideSidebarTests' as const },
+  { href: '/revision', label: 'Revision', icon: '🧠', hideKey: 'hideSidebarRevision' as const },
+  { href: '/formula-vault', label: 'Formula Vault', icon: '📄', hideKey: 'hideSidebarFormulaVault' as const },
+  { href: '/settings', label: 'Settings', icon: '⚙️', hideKey: 'hideSidebarSettings' as const },
 ]
 
 const Sidebar = memo(function Sidebar() {
@@ -78,22 +78,28 @@ const Sidebar = memo(function Sidebar() {
         </button>
       </div>
       <div className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map(item => {
-          const active = isActive(item.href)
-          if (item.href === '/ai') {
+        {NAV_ITEMS.filter(item => {
+          const hideKey = (item as any).hideKey
+          if (!hideKey) return true
+          return !(settings as any)[hideKey]
+        }).map(item => {
+          const i = item as any
+          const active = isActive(i.href)
+          const hideLabel = settings.hideSidebarLabels
+          if (i.href === '/ai') {
             return (
-              <button key={item.href} onClick={() => setShowBeta(true)}
+              <button key={i.href} onClick={() => setShowBeta(true)}
                 className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm transition-all ${active ? 'font-medium' : ''}`}
                 style={{
                   color: active ? 'var(--c-blue)' : 'var(--c-text-secondary)',
                   background: active ? 'rgba(35,131,226,0.08)' : 'transparent',
                 }}>
-                <span className="text-[18px]">{item.icon}</span>
-                <span>{item.label}</span>
+                <span className="text-[18px]">{i.icon}</span>
+                {!hideLabel && <span>{i.label}</span>}
                 <span className="ml-auto flex items-center gap-1.5">
-                  {(item as any).badge && (
+                  {i.badge && !hideLabel && (
                     <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(35,131,226,0.15)', color: 'var(--c-blue)' }}>
-                      {(item as any).badge}
+                      {i.badge}
                     </span>
                   )}
                   {active && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--c-blue)' }} />}
@@ -102,18 +108,19 @@ const Sidebar = memo(function Sidebar() {
             )
           }
           return (
-            <Link key={item.href} href={item.href}
+            <Link key={i.href} href={i.href}
+              title={hideLabel ? i.label : undefined}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${active ? 'font-medium' : ''}`}
               style={{
                 color: active ? 'var(--c-blue)' : 'var(--c-text-secondary)',
                 background: active ? 'rgba(35,131,226,0.08)' : 'transparent',
               }}>
-              <span className="text-[18px]">{item.icon}</span>
-              <span>{item.label}</span>
+              <span className="text-[18px]">{i.icon}</span>
+              {!hideLabel && <span>{i.label}</span>}
               <span className="ml-auto flex items-center gap-1.5">
-                {(item as any).badge && (
+                {i.badge && !hideLabel && (
                   <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(35,131,226,0.15)', color: 'var(--c-blue)' }}>
-                    {(item as any).badge}
+                    {i.badge}
                   </span>
                 )}
                 {active && <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--c-blue)' }} />}

@@ -11,6 +11,7 @@ import OnboardingFlow from '@/components/onboarding/OnboardingFlow'
 import PageTransition from '@/components/layout/PageTransition'
 import DashboardTour from '@/components/dashboard/DashboardTour'
 import OfflineOverlay from '@/components/OfflineOverlay'
+import StudyTimer from '@/components/dashboard/StudyTimer'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useProgressStore } from '@/store/progressStore'
 import { useTimetableStore } from '@/store/timetableStore'
@@ -131,6 +132,22 @@ function RequireAuth({ children, isAppPage }: { children: React.ReactNode; isApp
   return <>{children}</>
 }
 
+function SettingsGuardedComponents({ isAppPage }: { isAppPage: boolean }) {
+  const { settings } = useSettingsStore()
+  return (
+    <>
+      {isAppPage && !settings.hideAITutor ? <AITutorPanel /> : !isAppPage ? <LandingAIAssistant /> : null}
+      <FloatTimerGuard />
+    </>
+  )
+}
+
+function FloatTimerGuard() {
+  const { settings } = useSettingsStore()
+  if (settings.hideFloatTimer) return null
+  return <StudyTimer />
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { load } = useSettingsStore()
   const { load: loadProgress } = useProgressStore()
@@ -201,7 +218,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           {!isAppPage && <Footer />}
         </div>
-        {isAppPage ? <AITutorPanel /> : <LandingAIAssistant />}
+        <SettingsGuardedComponents isAppPage={isAppPage} />
         <OnboardingFlow />
         <DashboardTour />
         <OfflineOverlay />

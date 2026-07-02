@@ -9,6 +9,7 @@ import { useSettingsStore } from '@/store/settingsStore'
 import { db } from '@/lib/db'
 import { downloadJSON } from '@/lib/utils'
 import { getSupabase } from '@/lib/supabase'
+import CustomizePopup from '@/components/dashboard/CustomizePopup'
 import { setSyncUser, uploadAvatar } from '@/lib/supabase-sync'
 import { isProEmail } from '@/lib/useUser'
 import { estimateStorageUsage, formatBytes, getStorageLimit } from '@/lib/storage'
@@ -47,6 +48,7 @@ export default function SettingsPage() {
   const [showDeleteAccount, setShowDeleteAccount] = useState(false)
   const [deleteAccountConfirm, setDeleteAccountConfirm] = useState('')
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [showCustomize, setShowCustomize] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -319,6 +321,16 @@ export default function SettingsPage() {
                     className="text-xs font-medium px-4 py-1.5 rounded-[40px] text-white transition-all"
                     style={{ background: 'var(--c-btn-primary)' }}
                   >Start Tour</button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Customize UI</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Toggle sidebar items, dashboard sections, and features</div>
+                  </div>
+                  <button onClick={() => setShowCustomize(true)}
+                    className="text-xs font-medium px-4 py-1.5 rounded-[40px] transition-all"
+                    style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-text-secondary)' }}
+                  >Customize</button>
                 </div>
                 {computedIsPro && (
                 <div className="flex items-center justify-between">
@@ -607,6 +619,7 @@ export default function SettingsPage() {
         </div>
       </div>
       </div>
+      {showCustomize && <CustomizePopup onClose={() => setShowCustomize(false)} />}
     </div>
   )
 }

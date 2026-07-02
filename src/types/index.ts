@@ -213,6 +213,26 @@ export interface Settings {
   tourCompleted?: boolean
   language?: Language
   backlogReminder?: boolean
+  hideFloatTimer?: boolean
+  hideAITutor?: boolean
+  hideSidebarLabels?: boolean
+  hideSidebarPYQ?: boolean
+  hideSidebarBacklog?: boolean
+  hideSidebarJournal?: boolean
+  hideSidebarQuestions?: boolean
+  hideSidebarTests?: boolean
+  hideSidebarRevision?: boolean
+  hideSidebarFormulaVault?: boolean
+  hideSidebarTimetable?: boolean
+  hideSidebarProgress?: boolean
+  hideSidebarCompletion?: boolean
+  hideSidebarSyllabus?: boolean
+  hideSidebarSettings?: boolean
+  hideDashboardGamification?: boolean
+  hideDashboardHeatmap?: boolean
+  hideDashboardPace?: boolean
+  hideDashboardPlan?: boolean
+  hideDashboardContinue?: boolean
 }
 
 export type ChapterFilter = 'all' | 'not_started' | 'in_progress' | 'done' | 'revision_pending' | 'high_weightage' | 'weak' | 'high_priority'

@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
     if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
-      console.error('delete-account: missing env vars')
-      return NextResponse.json({ error: 'Server configuration error.' }, { status: 500 })
+      console.error('delete-account: missing env vars', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey, serviceRoleKey: !!serviceRoleKey })
+      return NextResponse.json({ error: 'Server configuration error. Please contact support.' }, { status: 500 })
     }
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -34,14 +34,15 @@ export async function POST(request: NextRequest) {
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
     if (deleteError) {
-      console.error('delete-account: admin delete failed', deleteError.message)
-      return NextResponse.json({ error: `Failed to delete account: ${deleteError.message}` }, { status: 500 })
+      const errorMessage = deleteError.message || deleteError.error_description || deleteError.error || JSON.stringify(deleteError)
+      console.error('delete-account: admin delete failed', { userId: user.id, error: deleteError })
+      return NextResponse.json({ error: `Failed to delete account: ${errorMessage}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('delete-account: unexpected error', message)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('delete-account: unexpected error', { error: err, message })
+    return NextResponse.json({ error: 'Internal server error. Please try again later.' }, { status: 500 })
   }
 }

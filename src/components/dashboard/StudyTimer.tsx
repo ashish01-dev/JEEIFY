@@ -116,7 +116,7 @@ export default function StudyTimer() {
   const totalFocusSeconds = focusMinutes * 60
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-[80px] right-6 z-50">
       {!expanded ? (
         <button onClick={() => setExpanded(true)}
           className="w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
