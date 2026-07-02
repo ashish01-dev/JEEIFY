@@ -4,6 +4,12 @@ import { db } from '@/lib/db'
 import syllabusData from '@/data/syllabus.json'
 import type { SyllabusData } from '@/types'
 
+const XP_PER_TOPIC = 5
+const XP_PER_PRACTICE = 10
+const XP_PER_PYQ = 10
+const XP_BASE_CHAPTER = 20
+const WEIGHT_MULT = { high: 3, medium: 2, low: 1 }
+
 const syllabus = syllabusData as unknown as SyllabusData
 
 /** Get all chapters for a subject from syllabus + custom chapters */
@@ -39,6 +45,7 @@ interface ProgressState {
   getSubjectChapters: (subject: Subject) => { total: number; done: number }
   getFilteredChapters: (subject: Subject, filter: ChapterFilter, sort: SortOption, search: string) => Promise<Chapter[]>
   getTotalChapters: () => { total: number; done: number }
+  _syncXp: (addXp: number) => Promise<void>
 }
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -64,20 +71,45 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const chs = await db.customChapters.toArray()
     set({ customChapters: chs })
   },
+  _syncXp: async (addXp: number) => {
+    if (addXp <= 0) return
+    try {
+      const { useGamificationStore, calcLevel } = await import('@/store/gamificationStore')
+      const gs = useGamificationStore.getState()
+      if (gs.loaded) {
+        const newXp = gs.xp + addXp
+        const { level } = calcLevel(newXp)
+        const update = { currentStreak: gs.currentStreak, longestStreak: gs.longestStreak, lastStudyDate: gs.lastStudyDate, totalStudyDays: gs.totalStudyDays, xp: newXp, level }
+        useGamificationStore.setState(update)
+        await db.settings.put({ id: 'gamification', value: update })
+      }
+    } catch {}
+  },
   setTopicDone: async (chapterId, topicId, done) => {
-    const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, revisionCount: 0, studySessions: 0 }
+    const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, xpEarned: 0, revisionCount: 0, studySessions: 0 }
     entry.topicStatus[topicId] = done
-    if (done) entry.status = 'in_progress'
+    if (done) {
+      entry.status = 'in_progress'
+      entry.xpEarned = (entry.xpEarned || 0) + XP_PER_TOPIC
+      get()._syncXp(XP_PER_TOPIC)
+    }
     const updated = { ...get().progress, [chapterId]: entry }
     set({ progress: updated })
     try { await db.progress.put({ chapterId, ...entry }) } catch {}
   },
   setTopicProgress: async (chapterId, topicId, field, done) => {
-    const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, topicProgress: {}, revisionCount: 0, studySessions: 0 }
+    const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, topicProgress: {}, xpEarned: 0, revisionCount: 0, studySessions: 0 }
     if (!entry.topicProgress) entry.topicProgress = {}
     if (!entry.topicProgress[topicId]) entry.topicProgress[topicId] = { theoryDone: false, practiceDone: false, pyqDone: false }
+    const prev = entry.topicProgress[topicId][field]
     entry.topicProgress[topicId] = { ...entry.topicProgress[topicId], [field]: done }
-    if (done) entry.status = 'in_progress'
+    if (done && !prev) {
+      entry.status = 'in_progress'
+      const xpMap = { theoryDone: XP_PER_TOPIC, practiceDone: XP_PER_PRACTICE, pyqDone: XP_PER_PYQ }
+      const xp = xpMap[field] || 0
+      entry.xpEarned = (entry.xpEarned || 0) + xp
+      get()._syncXp(xp)
+    }
     const updated = { ...get().progress, [chapterId]: entry }
     set({ progress: updated })
     try { await db.progress.put({ chapterId, ...entry }) } catch {}
@@ -96,26 +128,39 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   setChapterStatus: async (chapterId, status) => {
     const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, revisionCount: 0, studySessions: 0 }
     entry.status = status
-    if (status === 'done') entry.completedOn = new Date().toISOString().split('T')[0]
+    if (status === 'done') {
+      entry.completedOn = new Date().toISOString().split('T')[0]
+      const topicCount = Object.keys(entry.topicStatus).filter(k => entry.topicStatus[k]).length
+      const chWeight = 'high'
+      const bonusXp = XP_BASE_CHAPTER * (WEIGHT_MULT[chWeight as keyof typeof WEIGHT_MULT] || 1) + topicCount * 2
+      const alreadyAwarded = entry.xpEarned || 0
+      const newXp = Math.max(0, bonusXp - alreadyAwarded)
+      entry.xpEarned = (entry.xpEarned || 0) + newXp
+      if (newXp > 0) get()._syncXp(newXp)
+    }
     const updated = { ...get().progress, [chapterId]: entry }
     set({ progress: updated })
     try { await db.progress.put({ chapterId, ...entry }) } catch {}
   },
   markAllTopics: async (chapterId) => {
-    const entry: ChapterProgress = { status: 'done', completedOn: new Date().toISOString().split('T')[0], topicStatus: {}, revisionCount: 0, studySessions: 0 }
+    const entry: ChapterProgress = { status: 'done', completedOn: new Date().toISOString().split('T')[0], topicStatus: {}, revisionCount: 0, studySessions: 0, xpEarned: 0 }
+    let topicCount = 0
     for (const subj of Object.values(syllabus)) {
       if (!subj?.divisions) continue
       for (const d of subj.divisions) {
         for (const ch of d.chapters) {
-          if (ch.id === chapterId) ch.topics.forEach((t: Topic) => { entry.topicStatus[t.id] = true })
+          if (ch.id === chapterId) { ch.topics.forEach((t: Topic) => { entry.topicStatus[t.id] = true; topicCount++ }) }
         }
       }
     }
     for (const c of get().customChapters) {
-      if (c.id === chapterId) c.topics.forEach((t: Topic) => { entry.topicStatus[t.id] = true })
+      if (c.id === chapterId) c.topics.forEach((t: Topic) => { entry.topicStatus[t.id] = true; topicCount++ })
     }
+    const totalXp = topicCount * XP_PER_TOPIC + XP_BASE_CHAPTER
+    entry.xpEarned = totalXp
     set({ progress: { ...get().progress, [chapterId]: entry } })
     try { await db.progress.put({ chapterId, ...entry }) } catch {}
+    get()._syncXp(totalXp)
   },
   incrementRevision: async (chapterId) => {
     const entry = get().progress[chapterId] || { status: 'not_started', topicStatus: {}, revisionCount: 0, studySessions: 0 }

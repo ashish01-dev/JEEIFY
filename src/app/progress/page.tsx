@@ -158,6 +158,15 @@ export default function ProgressPage() {
     }
   }, [progress])
 
+  /* ─── Chapter XP ─── */
+  const chapterXp = useMemo(() => {
+    let total = 0
+    for (const p of Object.values(progress)) {
+      total += (p as any).xpEarned || 0
+    }
+    return total
+  }, [progress])
+
   /* ─── Average Performance ─── */
   const avgPerformance = useMemo(() => {
     if (dailyLogs.length === 0) return null
@@ -325,6 +334,36 @@ export default function ProgressPage() {
             </div>
           ))}
         </div>
+
+        {/* ─── Chapter XP ─── */}
+        {chapterXp > 0 && (
+        <div className="rounded-[18px] p-5 mb-8" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--c-text)' }}>
+            <span className="material-symbols-rounded text-[18px] align-text-bottom mr-1.5" style={{ color: 'var(--c-blue)' }}>auto_awesome</span>
+            Chapter XP
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(35,131,226,0.15)' }}>
+                <span style={{ color: 'var(--c-blue)' }}>⚡</span>
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>{chapterXp}</div>
+                <div className="text-[10px]" style={{ color: 'var(--c-caption)' }}>Total Chapter XP</div>
+              </div>
+            </div>
+            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--c-progress-bg)' }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{
+                width: `${Math.min(100, (chapterXp / 500) * 100)}%`,
+                background: 'linear-gradient(90deg, var(--c-blue), var(--c-green))',
+              }} />
+            </div>
+            <div className="text-xs font-medium" style={{ color: 'var(--c-caption)' }}>
+              {chapterXp >= 500 ? 'Maxed! 🏆' : `${500 - chapterXp} XP to next milestone`}
+            </div>
+          </div>
+        </div>
+        )}
 
         {/* ─── Batches ─── */}
         <div className="rounded-[18px] p-5 mb-8" data-tour="tour-progress-badges" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>

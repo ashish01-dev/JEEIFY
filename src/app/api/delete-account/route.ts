@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
     if (deleteError) {
-      const errorMessage = deleteError.message || deleteError.error_description || deleteError.error || JSON.stringify(deleteError)
-      console.error('delete-account: admin delete failed', { userId: user.id, error: deleteError })
+      const errorMessage = (deleteError as any).error_description || (deleteError as any).error || deleteError.message || JSON.stringify(Object.getOwnPropertyNames(deleteError).reduce((o: Record<string, unknown>, k) => { o[k] = (deleteError as any)[k]; return o }, {})) || 'Unknown server error'
+      console.error('delete-account: admin delete failed', { userId: user.id, error: deleteError, message: errorMessage })
       return NextResponse.json({ error: `Failed to delete account: ${errorMessage}` }, { status: 500 })
     }
 

@@ -263,6 +263,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        )}
 
         {/* ─── Subject Progress Cards ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7" data-tour="tour-progress-cards">
@@ -297,8 +298,10 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── Today's Plan + Continue Studying ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-7">
-          <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6 lg:col-span-2 relative overflow-hidden" data-tour="tour-plan" style={{
+        {(settings.hideDashboardPlan && settings.hideDashboardContinue) ? null : (
+        <div className="grid grid-cols-1 gap-4 mb-7" style={{ gridTemplateColumns: settings.hideDashboardPlan || settings.hideDashboardContinue ? '1fr' : '2fr 1fr' }}>
+          {!settings.hideDashboardPlan && (
+          <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6 relative overflow-hidden" data-tour="tour-plan" style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
           }}>
             <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl opacity-60" style={{ background: 'var(--c-blue)' }} />
@@ -370,7 +373,9 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+          )}
 
+          {!settings.hideDashboardContinue && (
           <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6 relative overflow-hidden" data-tour="tour-continue" style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
           }}>
@@ -413,7 +418,9 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
+          )}
         </div>
+        )}
 
         {/* ─── Recent Achievements ─── */}
         {recentUnlocked.length > 0 && (
@@ -431,8 +438,10 @@ export default function DashboardPage() {
         )}
 
         {/* ─── Heatmap + Study Pace ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-7">
-          <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6 lg:col-span-2" data-tour="tour-heatmap" style={{
+        {(settings.hideDashboardHeatmap && settings.hideDashboardPace) ? null : (
+        <div className="grid grid-cols-1 gap-4 mb-7" style={{ gridTemplateColumns: settings.hideDashboardHeatmap || settings.hideDashboardPace ? '1fr' : '2fr 1fr' }}>
+          {!settings.hideDashboardHeatmap && (
+          <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6" data-tour="tour-heatmap" style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
           }}>
             <div className="flex items-center gap-2 mb-4">
@@ -463,7 +472,9 @@ export default function DashboardPage() {
               <span>More</span>
             </div>
           </div>
+          )}
 
+          {!settings.hideDashboardPace && (
           <div className="rounded-[18px] px-5 md:px-6 py-5 md:py-6" data-tour="tour-pace" style={{
             background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
           }}>
@@ -505,7 +516,9 @@ export default function DashboardPage() {
               <div className="text-center py-8 text-sm" style={{ color: 'var(--c-muted)' }}>Loading pace data...</div>
             )}
           </div>
+          )}
         </div>
+        )}
 
         {/* Empty state */}
         {loaded && !stats && (

@@ -63,6 +63,7 @@ export interface ChapterProgress {
   actualHours?: number
   studySessions: number
   difficulty?: 'easy' | 'medium' | 'hard'
+  xpEarned?: number
 }
 
 export type UserProgress = Record<string, ChapterProgress>
