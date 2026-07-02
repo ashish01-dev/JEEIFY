@@ -212,6 +212,7 @@ export interface Settings {
   isPro: boolean
   proExpiryDate?: string
   tourCompleted?: boolean
+  tourReady?: boolean
   language?: Language
   backlogReminder?: boolean
   hideFloatTimer?: boolean

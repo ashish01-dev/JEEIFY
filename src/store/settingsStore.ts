@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS: Settings = {
   isPro: false,
   proExpiryDate: undefined,
   tourCompleted: false,
+  tourReady: false,
   language: 'en',
   backlogReminder: true,
   hideFloatTimer: false,

@@ -111,8 +111,6 @@ export default function OnboardingFlow() {
   const [checkingOnboarded, setCheckingOnboarded] = useState(true)
   const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  const onboardingKey = (email: string | null) => email ? `jee_onboarded_${btoa(email).slice(0, 20)}` : null
-
   useEffect(() => {
     const sb = getSupabase()
     if (!sb) { setSignedIn(false); setCheckingOnboarded(false); return }
@@ -123,10 +121,11 @@ export default function OnboardingFlow() {
       setSignedIn(!!user)
       const currentState = useSettingsStore.getState()
       if (currentState.settings.onboarded) { setCheckingOnboarded(false); return }
-      const key = email ? onboardingKey(email) : null
-      const lsOnboarded = key ? localStorage.getItem(key) === '1' : false
-      const metaOnboarded = user?.user_metadata?.onboarded === true
-      if (lsOnboarded || metaOnboarded) {
+      const metaPending = user?.user_metadata?.onboarding_pending === true
+      const metaCompleted = user?.user_metadata?.onboarded === true
+      if (metaCompleted) {
+        update({ onboarded: true })
+      } else if (!metaPending) {
         update({ onboarded: true })
       }
       setCheckingOnboarded(false)
@@ -138,10 +137,11 @@ export default function OnboardingFlow() {
       setSignedIn(!!u)
       const currentState = useSettingsStore.getState()
       if (currentState.settings.onboarded) return
-      const key = email ? onboardingKey(email) : null
-      const lsOnboarded = key ? localStorage.getItem(key) === '1' : false
-      const metaOnboarded = u?.user_metadata?.onboarded === true
-      if (lsOnboarded || metaOnboarded) {
+      const metaPending = u?.user_metadata?.onboarding_pending === true
+      const metaCompleted = u?.user_metadata?.onboarded === true
+      if (metaCompleted) {
+        update({ onboarded: true })
+      } else if (!metaPending) {
         update({ onboarded: true })
       }
     })
@@ -207,12 +207,10 @@ export default function OnboardingFlow() {
         } catch (err) { console.error('avatar upload failed:', err) }
       }
     }
-    await update(updates)
-    const key = onboardingKey(userEmail)
-    if (key) localStorage.setItem(key, '1')
+    await update({ ...updates, tourReady: true })
     const sb = getSupabase()
     if (sb) {
-      try { await sb.auth.updateUser({ data: { onboarded: true } }) } catch {}
+      try { await sb.auth.updateUser({ data: { onboarded: true, onboarding_pending: false } }) } catch {}
     }
   }
 

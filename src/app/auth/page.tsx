@@ -91,7 +91,7 @@ function AuthPageContent() {
         }
       }
     } else {
-      const { data, error } = await sb.auth.signUp({ email, password })
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { onboarding_pending: true } } })
       if (error) {
         if (error.message.includes('already registered')) {
           setError('An account with this email already exists. Sign in instead.')

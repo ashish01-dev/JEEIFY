@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
-const DEVUPLOADS_KEY = '128561wl49c553zyxzxbqr'
-const GOOGLE_DRIVE_KEY = 'AIzaSyAFxuVUv3STBB-RLUbmxspK85Gd6RiOUhM'
+const DEVUPLOADS_KEY = process.env.DEVUPLOADS_KEY || ''
+const GOOGLE_DRIVE_KEY = process.env.GOOGLE_DRIVE_KEY || ''
 
 function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64)
@@ -93,6 +94,14 @@ async function getDirectLink(fileCode: string): Promise<string | undefined> {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return req.cookies.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
     const body = await req.json()
     const { file: base64, name, type, isPro } = body
     if (!base64 || !name) return NextResponse.json({ error: 'No file provided' }, { status: 400 })

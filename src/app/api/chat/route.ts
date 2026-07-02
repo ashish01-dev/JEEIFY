@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { AVAILABLE_TOOLS, executeToolCall } from '@/lib/ai-actions'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || ''
@@ -43,6 +44,14 @@ function buildTools() {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return req.cookies.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
     const { messages, systemPrompt, maxTokens = 1024, temperature = 0.7, enableActions = true } = await req.json()
 
     if (!OPENROUTER_API_KEY) {

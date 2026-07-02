@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -16,10 +17,17 @@ function getBatchId(name: string): string {
   return name.toLowerCase().replace(/\s+/g, '_')
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll() { return req.cookies.getAll() }, setAll() {} } }
+    )
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-      /* Fallback: return empty stats when no backend */
       return NextResponse.json({
         batches: BATCHES.map(b => ({ id: getBatchId(b.name), name: b.name, chapters: b.chapters, percentage: 0, totalUsers: 0, owners: 0 })),
         totalUsers: 0,
@@ -28,12 +36,10 @@ export async function GET() {
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
 
-    /* Count total unique users who have at least one progress entry */
     const { count: totalUsers } = await sb
       .from('progress')
       .select('user_id', { count: 'exact', head: true })
 
-    /* Get per-user chapter completion counts */
     const { data: doneData } = await sb
       .from('progress')
       .select('user_id')
@@ -46,7 +52,6 @@ export async function GET() {
       })
     }
 
-    /* Count chapters done per user */
     const userCounts: Record<string, number> = {}
     for (const row of doneData) {
       userCounts[row.user_id] = (userCounts[row.user_id] || 0) + 1

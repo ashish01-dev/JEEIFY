@@ -138,7 +138,7 @@ export default function DashboardTour() {
   const stepRef = useRef(step)
   stepRef.current = step
 
-  const shouldShow = loaded && settings.onboarded && !settings.tourCompleted
+  const shouldShow = loaded && settings.onboarded && settings.tourReady && !settings.tourCompleted
 
   /* Start tour after user lands on dashboard */
   useEffect(() => {
