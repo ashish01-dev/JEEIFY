@@ -217,7 +217,7 @@ export default function DailyPlanModal({ open, onClose, onSave, presetSubjects, 
           )}
         </div>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end mb-2">
           <button onClick={onClose}
             className="text-xs font-medium px-4 py-2 rounded-[40px] transition-all"
             style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-text-secondary)' }}
@@ -227,6 +227,9 @@ export default function DailyPlanModal({ open, onClose, onSave, presetSubjects, 
             style={{ background: 'var(--c-btn-primary)' }}
           >Save Plan</button>
         </div>
+        <p className="text-[10px] text-center" style={{ color: 'var(--c-orange)' }}>
+          💡 You can disable this popup anytime in Settings → Preferences
+        </p>
         </>
         )}
       </div>

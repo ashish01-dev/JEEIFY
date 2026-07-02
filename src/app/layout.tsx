@@ -137,14 +137,14 @@ function SettingsGuardedComponents({ isAppPage }: { isAppPage: boolean }) {
   return (
     <>
       {isAppPage && !settings.hideAITutor ? <AITutorPanel /> : !isAppPage ? <LandingAIAssistant /> : null}
-      <FloatTimerGuard />
+      <FloatTimerGuard isAppPage={isAppPage} />
     </>
   )
 }
 
-function FloatTimerGuard() {
+function FloatTimerGuard({ isAppPage }: { isAppPage: boolean }) {
   const { settings } = useSettingsStore()
-  if (settings.hideFloatTimer) return null
+  if (!isAppPage || settings.hideFloatTimer) return null
   return <StudyTimer />
 }
 
