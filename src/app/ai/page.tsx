@@ -36,6 +36,74 @@ function estimateHours(chapter: Chapter): number {
   return Math.round(t * 0.75 * w)
 }
 
+const INFO_DATA: Record<string, { title: string; body: string }> = {
+  mastery: {
+    title: 'How Current Mastery is calculated',
+    body: 'Your mastery percentage is the ratio of completed chapters to total chapters across all three subjects (Physics, Chemistry, Maths). A chapter is considered "completed" when its status is marked as done in your syllabus tracker.'
+  },
+  backlog_risk: {
+    title: 'How Backlog Risk is calculated',
+    body: 'Based on the Ebbinghaus Forgetting Curve. Each chapter\'s retention decays daily from 98% after study. Chapters below 50% retention are flagged as "urgent" — they need immediate revision to prevent permanent memory loss.'
+  },
+  recall: {
+    title: 'How Active Recall is calculated',
+    body: 'Your current study streak (consecutive days with at least one study session logged). Combined with your overall chapter completion progress to show your active engagement with the syllabus.'
+  },
+  decay: {
+    title: 'How Topic Decay Analysis works',
+    body: 'Each studied chapter\'s retention is calculated using the formula: max(20%, min(98%, 100% - daysSinceLastRevision × 2.5%)). This follows the Ebbinghaus forgetting curve. Lower bars = chapters needing urgent revision.'
+  },
+  subject_perf: {
+    title: 'How Subject Performance is calculated',
+    body: 'Average accuracy across all logged mock tests for each subject. The trend compares your last 3 tests against earlier ones — "up" means >3% improvement, "down" means >3% decline, "stable" means within ±3%.'
+  },
+  mistakes: {
+    title: 'How The Mistake Log works',
+    body: 'Errors are detected from two sources: (1) Conceptual — chapters with retention below 45% suggest weak understanding. (2) Calculation — tests with accuracy below 60%. (3) Memory Loss — chapters not revised for 21+ days with retention below 60%.'
+  },
+  avg_time: {
+    title: 'How Average Review Time is calculated',
+    body: 'The average duration of all your logged study sessions across all subjects. Longer review times typically indicate deeper focus sessions.'
+  },
+  mistakes_fixed: {
+    title: 'How Mistakes Fixed is tracked',
+    body: 'Count of backlog items you\'ve marked as "cleared". Each cleared backlog item represents a topic, PYQ, or revision task you\'ve completed and checked off.'
+  },
+  recall_acc: {
+    title: 'How Recall Accuracy is calculated',
+    body: 'Average retention percentage across all your active (studied) chapters. Higher means you\'re consistently revising and maintaining your knowledge over time.'
+  },
+}
+
+const INFO_ICONS: Record<string, string> = {
+  mastery: 'Target → ch. completion ratio',
+  backlog_risk: 'AlertCircle → retention < 50% flags',
+  recall: 'Zap → streak + syllabus completion',
+  decay: 'Bar chart → forgetting curve per topic',
+  subject_perf: 'Trend lines → test accuracy history',
+  mistakes: 'Table → error pattern detection',
+  avg_time: 'Clock → mean session duration',
+  mistakes_fixed: 'CheckCircle → cleared backlog count',
+  recall_acc: 'Refresh → avg retention across topics',
+}
+
+function InfoPopup({ section, onClose }: { section: string; onClose: () => void }) {
+  const data = INFO_DATA[section]
+  if (!data) return null
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40" style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} onClick={onClose}>
+      <div className="max-w-sm mx-4 rounded-[18px] p-6 animate-scale-in" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow-hover)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold" style={{ color: 'var(--c-text)' }}>{data.title}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.1]" style={{ color: 'var(--c-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-text-secondary)' }}>{data.body}</p>
+        <button onClick={onClose} className="mt-5 w-full py-2.5 text-sm font-semibold rounded-[40px] text-white transition-opacity hover:opacity-90" style={{ background: 'var(--c-btn-primary)' }}>Got it</button>
+      </div>
+    </div>
+  )
+}
+
 function BetaPopup({ onAcknowledge }: { onAcknowledge: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40" style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
@@ -91,6 +159,7 @@ export default function AIPage() {
   const handleBetaAcknowledge = useCallback(() => { localStorage.setItem('ai_beta_acknowledged', '1'); setShowBeta(false) }, [])
   const [availableHours, setAvailableHours] = useState(settings.dailyStudyHours || 6)
   const [showDisclaimer, setShowDisclaimer] = useState(false)
+const [infoSection, setInfoSection] = useState<string | null>(null)
 
   const getChapterProgress = useCallback((ch: Chapter) => {
     const p = progress[ch.id]
@@ -305,8 +374,11 @@ export default function AIPage() {
           <div className="grid grid-cols-12 gap-3 mb-8">
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,185,129,0.1)' }}><Target size={22} style={{ color: 'var(--c-green)' }} /></div>
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Current Mastery</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Current Mastery</span>
+                  <button onClick={() => setInfoSection('mastery')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>{overallStats.pct}%</p>
                 <div className="w-full h-1.5 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--c-progress-bg)' }}>
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${overallStats.pct}%`, background: 'var(--c-green)' }} />
@@ -316,8 +388,11 @@ export default function AIPage() {
 
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(239,68,68,0.1)' }}><AlertCircle size={22} style={{ color: 'var(--c-red)' }} /></div>
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Backlog Risk</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Backlog Risk</span>
+                  <button onClick={() => setInfoSection('backlog_risk')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>{decayData.urgent} <span className="text-sm font-normal" style={{ color: 'var(--c-muted)' }}>Topics</span></p>
                 <p className="text-[11px] mt-0.5" style={{ color: 'var(--c-muted)' }}>Critical topics needing immediate retrieval</p>
               </div>
@@ -325,8 +400,11 @@ export default function AIPage() {
 
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(59,130,246,0.1)' }}><Zap size={22} style={{ color: 'var(--c-blue)' }} /></div>
-              <div>
-                <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Active Recall</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Active Recall</span>
+                  <button onClick={() => setInfoSection('recall')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-2xl font-bold" style={{ color: 'var(--c-text)' }}>{currentStreak}d <span className="text-sm font-normal" style={{ color: 'var(--c-muted)' }}>Streak</span></p>
                 <p className="text-[11px] mt-0.5" style={{ color: 'var(--c-muted)' }}>{overallStats.chaptersDone}/{overallStats.chaptersTotal} chapters done</p>
               </div>
@@ -335,7 +413,10 @@ export default function AIPage() {
             <div className="col-span-12 lg:col-span-8 card-base p-5">
               <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                 <div>
-                  <h3 className="text-base font-semibold" style={{ color: 'var(--c-text)' }}>Topic Decay Analysis</h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="text-base font-semibold" style={{ color: 'var(--c-text)' }}>Topic Decay Analysis</h3>
+                    <button onClick={() => setInfoSection('decay')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <p className="text-[12px]" style={{ color: 'var(--c-muted)' }}>Ebbinghaus forgetting curve for your active topics</p>
                 </div>
                 {decayData.urgent > 0 && <span className="text-[10px] font-bold px-2 py-1 rounded-full shrink-0" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--c-red)', border: '1px solid rgba(239,68,68,0.2)' }}>URGENT: {decayData.urgent} TOPIC{decayData.urgent > 1 ? 'S' : ''}</span>}
@@ -361,7 +442,10 @@ export default function AIPage() {
             </div>
 
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 card-base p-5 flex flex-col">
-              <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--c-text)' }}>Subject Performance</h3>
+              <div className="flex items-center gap-1.5 mb-1">
+                <h3 className="text-base font-semibold" style={{ color: 'var(--c-text)' }}>Subject Performance</h3>
+                <button onClick={() => setInfoSection('subject_perf')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+              </div>
               <p className="text-[12px] mb-4" style={{ color: 'var(--c-muted)' }}>{tests.length > 0 ? `From ${tests.length} test${tests.length > 1 ? 's' : ''}` : 'No tests logged yet'}</p>
               <div className="flex-1 flex flex-col justify-center gap-4">
                 {SUBJECTS.map(sub => {
@@ -394,7 +478,10 @@ export default function AIPage() {
             <div className="col-span-12 card-base overflow-hidden">
               <div className="flex items-center justify-between p-5 pb-4 flex-wrap gap-2">
                 <div>
-                  <h3 className="text-base font-semibold" style={{ color: 'var(--c-text)' }}>The Mistake Log</h3>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="text-base font-semibold" style={{ color: 'var(--c-text)' }}>The Mistake Log</h3>
+                    <button onClick={() => setInfoSection('mistakes')} className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <p className="text-[12px]" style={{ color: 'var(--c-muted)' }}>Errors detected from tests and retention analysis</p>
                 </div>
               </div>
@@ -436,15 +523,33 @@ export default function AIPage() {
 
             <div className="col-span-12 sm:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(59,130,246,0.1)' }}><Clock size={20} style={{ color: 'var(--c-blue)' }} /></div>
-              <div><span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Avg Review Time</span><p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.avgReviewTime}<span className="text-sm font-normal" style={{ color: 'var(--c-muted)' }}> min</span></p></div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Avg Review Time</span>
+                  <button onClick={() => setInfoSection('avg_time')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
+                <p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.avgReviewTime}<span className="text-sm font-normal" style={{ color: 'var(--c-muted)' }}> min</span></p>
+              </div>
             </div>
             <div className="col-span-12 sm:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(16,185,129,0.1)' }}><CheckCircle2 size={20} style={{ color: 'var(--c-green)' }} /></div>
-              <div><span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Mistakes Fixed</span><p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.mistakesFixed.toLocaleString()}</p></div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Mistakes Fixed</span>
+                  <button onClick={() => setInfoSection('mistakes_fixed')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
+                <p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.mistakesFixed.toLocaleString()}</p>
+              </div>
             </div>
             <div className="col-span-12 sm:col-span-4 card-base p-5 flex items-center gap-4">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(245,158,11,0.1)' }}><RefreshCw size={20} style={{ color: 'var(--c-orange)' }} /></div>
-              <div><span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Recall Accuracy</span><p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.avgRetention}%</p></div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Recall Accuracy</span>
+                  <button onClick={() => setInfoSection('recall_acc')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
+                <p className="text-xl font-bold" style={{ color: 'var(--c-text)' }}>{miniStats.avgRetention}%</p>
+              </div>
             </div>
           </div>
 
@@ -646,6 +751,7 @@ export default function AIPage() {
           </div>
         ) : isPro ? proContent : <div className="relative min-h-[70vh]">{proGateContent}</div>}
       </div>
+      {infoSection && <InfoPopup section={infoSection} onClose={() => setInfoSection(null)} />}
       {showBeta && <BetaPopup onAcknowledge={handleBetaAcknowledge} />}
       {showDisclaimer && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowDisclaimer(false)}>

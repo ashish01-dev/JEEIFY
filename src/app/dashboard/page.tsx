@@ -75,7 +75,9 @@ export default function DashboardPage() {
   useEffect(() => {
     db.dailyPlans.get(today).then(p => {
       setPlan(p || null)
-      if (!p && isPro && settings.autoPlanPopup && settings.onboarded) setShowPlanModal(true)
+      const tourForced = sessionStorage.getItem('tour_forced') === 'true'
+      if (!p && isPro && settings.autoPlanPopup && settings.onboarded && !tourForced) setShowPlanModal(true)
+      if (tourForced) sessionStorage.removeItem('tour_forced')
       setPlanLoaded(true)
     })
     db.dailyLogs.toArray().then(setDailyLogs)

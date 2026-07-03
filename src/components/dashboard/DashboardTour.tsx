@@ -243,6 +243,7 @@ export default function DashboardTour() {
     setPhase('navigating')
     setStarted(false)
     document.body.style.overflow = ''
+    sessionStorage.removeItem('tour_forced')
     update({ tourCompleted: true })
   }
 

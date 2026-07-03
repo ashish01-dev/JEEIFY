@@ -416,6 +416,22 @@ export default function SyllabusPage() {
           </div>
         </div>
 
+        {/* Chapter XP Summary */}
+        <div className="mb-6 p-3 rounded-[12px]" style={{ background: 'var(--c-card-alt)', border: '1px solid var(--c-border-card)' }}>
+          <div className="flex items-center justify-between text-xs" style={{ color: 'var(--c-muted)' }}>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-rounded text-[16px]" style={{ color: 'var(--c-blue)' }}>auto_awesome</span>
+              Chapter XP Earned
+            </span>
+            <span className="font-medium" style={{ color: 'var(--c-text)' }}>
+              {Object.values(progress).reduce((a: number, p: any) => a + (p.xpEarned || 0), 0)} <span className="font-normal" style={{ color: 'var(--c-caption)' }}>/ 1000</span>
+            </span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden mt-1.5" style={{ background: 'var(--c-progress-bg)' }}>
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (Object.values(progress).reduce((a: number, p: any) => a + (p.xpEarned || 0), 0) / 1000) * 100)}%`, background: 'linear-gradient(90deg, var(--c-blue), var(--c-green))' }} />
+          </div>
+        </div>
+
         {/* Chapter List */}
         {filteredChapters.length === 0 ? (
           <div className="text-center py-16">
@@ -502,19 +518,23 @@ export default function SyllabusPage() {
 
                   {/* Expanded Topics */}
                   {expandedId === ch.id && (
-                    <div className="ml-[46px] mt-1 mb-2 p-3 rounded-[12px] animate-slide-up" style={{ background: 'var(--c-card-alt)', border: '1px solid var(--c-border-card)' }}>
-                      <div className="space-y-1">
+                    <div className="ml-[56px] mt-1 mb-2 p-4 rounded-[12px] animate-slide-up" style={{ background: 'var(--c-card-alt)', border: '1px solid var(--c-border-card)' }}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Topics</span>
+                        <span className="text-[11px] font-medium flex items-center gap-1" style={{ color: 'var(--c-blue)' }}>
+                          <span className="material-symbols-rounded text-[14px]">auto_awesome</span>
+                          {p?.xpEarned || 0} XP
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
                         {chTopics.length > 0 ? chTopics.map(t => {
                           const done = p?.topicStatus[t.id] ?? false
                           return (
-                            <label key={t.id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-[8px] cursor-pointer hover:opacity-80 transition-colors">
-                              <input
-                                type="checkbox"
-                                checked={done}
-                                onChange={e => setTopicDone(ch.id, t.id, e.target.checked)}
-                                className="w-3.5 h-3.5 rounded-[3px]"
-                                style={{ accentColor: 'var(--c-blue)' }}
-                              />
+                            <label key={t.id} className="flex items-center gap-3 px-3 py-2 rounded-[10px] cursor-pointer hover:opacity-80 transition-colors" style={{ background: 'transparent' }}>
+                              <div className={`w-[18px] h-[18px] rounded-[4px] flex items-center justify-center transition-all flex-shrink-0 ${done ? 'text-white' : ''}`} style={{ background: done ? 'var(--c-blue)' : 'var(--c-border)', border: done ? 'none' : '1px solid var(--c-border-input)' }}>
+                                {done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                              </div>
+                              <input type="checkbox" checked={done} onChange={e => setTopicDone(ch.id, t.id, e.target.checked)} className="sr-only" />
                               <span className={`text-[13px] ${done ? 'line-through' : ''}`}
                                 style={{ color: done ? 'var(--c-muted)' : 'var(--c-text)' }}>
                                 {t.name}
@@ -529,7 +549,7 @@ export default function SyllabusPage() {
                         )}
                       </div>
                       {chTopics.length > 0 && chStatus !== 'done' && (
-                        <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: '1px solid var(--c-border)' }}>
+                        <div className="flex items-center gap-2 mt-3 pt-3" style={{ borderTop: '1px solid var(--c-border)' }}>
                           <button onClick={() => markAllTopics(ch.id)}
                             className="text-[11px] font-medium px-3 py-1.5 rounded-[40px] text-white"
                             style={{ background: 'var(--c-btn-primary)' }}>

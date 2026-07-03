@@ -1,0 +1,71 @@
+Title: I built a free AI-powered platform for JEE prep because I couldn't find anything like this when I was preparing
+
+Hey everyone,
+
+I was a JEE aspirant a few years back. And honestly? I struggled a lot. Not just with the tough topics — but with keeping track of what I had studied, what was left, what to revise, when to revise, and where I was wasting time. I tried different apps, spreadsheets, sticky notes on my wall... nothing really worked together.
+
+So after my prep, I started building something that I wish I had back then. It's called JEEIFY — a personal study platform just for JEE.
+
+It's completely free to start, and I've kept a Pro plan at just ₹30/month (basically a cup of chai) to help cover the server costs and the AI API bills — because the AI assistant runs on OpenRouter and that isn't free on my end.
+
+What it does:
+
+1. Syllabus Tracker
+Full JEE syllabus broken down subject-wise, chapter-wise. You mark what you've done, it shows what's left. Gives you a clear picture without any confusion.
+
+2. AI Assistant (Pro feature)
+You can literally ask it anything — "Explain Faraday's Law", "Solve this kinematics problem", "What should I study today?". It gives answers in simple words, remembers what you asked before, and adapts to your level. No more waiting for a tutor.
+
+3. PYQ Practice
+Previous year questions sorted by chapter. You attempt, it tells you right/wrong, you can bookmark tough ones. Stats show your accuracy per chapter so you know where you stand.
+
+4. Test Analyzer
+Log your mock test scores. See average accuracy, best score, trend over time with a chart. Helps you spot if you're improving or stuck.
+
+5. Backlog Tracker
+Chapters you left behind? Add them to backlog. It reminds you when they're due for revision so nothing slips through the cracks.
+
+6. Pomodoro Timer
+Floating timer that works on every page. Focus mode, break mode. Logs your study time automatically.
+
+7. Formula Flashcards
+Swipeable flash cards for formulas. Filter by subject or chapter. Tap to flip. Great for quick revision.
+
+8. Study Heatmap
+Full year GitHub-style calendar shows how consistently you're studying. Helps build discipline.
+
+9. Timetable Planner
+Drag-and-drop weekly planner. Pre-built templates. Plan your day and actually stick to it.
+
+10. Progress Dashboard
+One screen shows everything — daily target, chapter progress, upcoming revisions, gamification (streaks, XP, level), recent achievements. Keeps you motivated.
+
+11. Cloud Sync
+Everything syncs to Supabase. Start on laptop, continue on phone. No data loss.
+
+12. Activity Journal
+Daily log of what you studied. See your consistency over months.
+
+13. Revision Tools
+Upload notes, store formula sheets, manage revision materials all in one place.
+
+And the best part? There's a 16-step guided tour that walks you through everything when you first join. No confusion.
+
+I've tested this with real users and I'm still actively adding features every week. What's coming soon:
+- Whiteboard mode for the AI where you can write/draw
+- Voice input so you can talk to the AI instead of typing
+- Upload PDFs and get the AI to explain them
+- Image-based doubt solving (snap a problem and ask)
+- Handwritten notes recognition
+- More test analysis features
+- Collaborative study rooms (study with friends)
+
+Everything keeps getting better. I read every feedback and fix things as fast as I can.
+
+If this sounds useful, give it a shot: https://jeeify.app
+
+Free plan is truly free — no time limit. Pro is ₹30/month if you want the AI and advanced features (helps me keep the servers running 😅).
+
+Would love to hear what you think — good or bad. I'm building this for people like us, so your honest opinion genuinely helps.
+
+TL;DR: Built a free JEE prep platform with AI tutor, syllabus tracker, PYQs, test analyzer, backlog reminders, pomodoro timer, flashcards, heatmap, and more. Pro is ₹30/mo to cover costs. New features dropping constantly. Check it: jeeify.app

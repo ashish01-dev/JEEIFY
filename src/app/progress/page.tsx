@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useProgressStore } from '@/store/progressStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useUser } from '@/lib/useUser'
@@ -8,7 +8,7 @@ import { calculatePace } from '@/lib/pacing'
 import { db } from '@/lib/db'
 import { formatDate } from '@/lib/utils'
 import syllabusData from '@/data/syllabus.json'
-import type { SyllabusData, Subject, TestEntry, Chapter } from '@/types'
+import type { SyllabusData, Subject, TestEntry, Chapter, BacklogItem } from '@/types'
 import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
@@ -71,10 +71,15 @@ export default function ProgressPage() {
   const [badgePopup, setBadgePopup] = useState<{ name: string; icon: string; desc: string; color: string; owned: boolean; percentage?: number; type: 'batch' | 'achievement' } | null>(null)
   const [badgeStats, setBadgeStats] = useState<Record<string, number>>({})
   const [statsTotalUsers, setStatsTotalUsers] = useState(0)
+  const [backlogItems, setBacklogItems] = useState<BacklogItem[]>([])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
 
   useEffect(() => { db.tests.toArray().then(setTests) }, [])
   useEffect(() => { db.questions.toArray().then(setQuestionEntries) }, [])
   useEffect(() => { db.dailyLogs.toArray().then(setDailyLogs) }, [])
+  useEffect(() => { db.backlog.toArray().then(setBacklogItems) }, [])
   useEffect(() => {
     fetch('/api/badge-stats').then(r => r.json()).then(data => {
       if (data?.batches) {
@@ -368,69 +373,113 @@ export default function ProgressPage() {
         {/* ─── Batches ─── */}
         <div className="rounded-[18px] p-5 mb-8" data-tour="tour-progress-badges" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
           <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--c-text)' }}>
-            <span className="material-symbols-rounded text-[18px] align-text-bottom mr-1.5" style={{ color: 'var(--c-orange)' }}>military_tech</span>
-            Batches
-            {!isPro && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(35,131,226,0.15)', color: 'var(--c-blue)' }}>Pro</span>}
-          </h2>
-          {!isPro ? (
-            <div className="text-center py-6">
-              <div className="text-3xl mb-3">🔒</div>
-              <p className="text-sm mb-3" style={{ color: 'var(--c-muted)' }}>Batch tracking is a Pro feature. Track your progress through ranked milestones.</p>
-              <button onClick={() => window.location.href = '/pricing'}
-                className="inline-flex items-center gap-1.5 text-white text-[12px] font-medium rounded-[40px] px-[18px] py-[7px] transition-all duration-200"
-                style={{ background: 'var(--c-btn-primary)' }}>Upgrade to Pro</button>
-            </div>
-          ) : (() => {
-            const totalDone = subjectsMeta.reduce((a, s) => a + s.chapters.done, 0)
-            const BATCHES = [
-              { name: 'Beginner', icon: '🌱', chapters: 5, color: 'var(--c-green)' },
-              { name: 'Intermediate', icon: '📘', chapters: 15, color: 'var(--c-blue)' },
-              { name: 'Advanced', icon: '⚡', chapters: 30, color: 'var(--c-orange)' },
-              { name: 'Expert', icon: '🏆', chapters: 50, color: 'var(--c-purple)' },
-              { name: 'Master', icon: '👑', chapters: 75, color: 'var(--c-red)' },
-            ]
-            return (
-              <div className="space-y-2">
-                {BATCHES.map((b, i) => {
-                  const unlocked = totalDone >= b.chapters
-                  const prevThreshold = i === 0 ? 0 : BATCHES[i - 1].chapters
-                  const progressInBatch = Math.min(100, ((totalDone - prevThreshold) / (b.chapters - prevThreshold)) * 100)
-                  const isActive = !unlocked && totalDone >= prevThreshold
-                  return (
-                    <div key={b.name} onClick={() => setBadgePopup({ name: b.name, icon: b.icon, desc: `Complete ${b.chapters} chapters`, color: b.color, owned: unlocked, percentage: badgeStats[b.name.toLowerCase().replace(/\s+/g, '_')], type: 'batch' })}
-                      className="flex items-center gap-3 p-3 rounded-[14px] transition-all cursor-pointer hover:-translate-y-[1px]" style={{
-                      background: unlocked ? 'var(--c-card-alt)' : 'var(--c-card-alt)',
-                      border: `1px solid ${unlocked ? b.color : 'var(--c-border-card)'}`,
-                      opacity: unlocked || isActive ? 1 : 0.5,
-                      borderLeft: `3px solid ${unlocked ? b.color : isActive ? b.color : 'var(--c-border)'}`,
-                    }}>
-                      <span className="text-xl">{b.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-semibold" style={{ color: unlocked ? b.color : 'var(--c-text)' }}>
-                            {unlocked ? '✓ ' : ''}{b.name}
-                          </span>
-                          {unlocked && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: `${b.color}15`, color: b.color }}>Unlocked</span>}
-                          {isActive && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(35,131,226,0.15)', color: 'var(--c-blue)' }}>{totalDone}/{b.chapters} ch.</span>}
-                        </div>
-                        <div className="text-[10px] mb-1.5" style={{ color: 'var(--c-muted)' }}>Complete {b.chapters} chapters</div>
-                        <div className="h-1.5 rounded-full overflow-hidden mb-1.5" style={{ background: 'var(--c-progress-bg)' }}>
-                          <div className="h-full rounded-full transition-all duration-700" style={{
-                            width: `${unlocked ? 100 : isActive ? progressInBatch : 0}%`,
-                            background: unlocked ? b.color : isActive ? b.color : 'var(--c-caption)',
-                          }} />
-                        </div>
-                        <div className="flex items-center gap-2 text-[9px]" style={{ color: 'var(--c-caption)' }}>
-                          <span>{badgeStats[b.name.toLowerCase().replace(/\s+/g, '_')] !== undefined ? `${badgeStats[b.name.toLowerCase().replace(/\s+/g, '_')]}% of users` : ''}</span>
-                          {statsTotalUsers > 0 && <span>&middot; {statsTotalUsers} users</span>}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+              <span className="material-symbols-rounded text-[18px] align-text-bottom mr-1.5" style={{ color: 'var(--c-orange)' }}>military_tech</span>
+              Badges
+              {!isPro && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(35,131,226,0.15)', color: 'var(--c-blue)' }}>Pro</span>}
+            </h2>
+            {!isPro ? (
+              <div className="text-center py-6">
+                <div className="text-3xl mb-3">🔒</div>
+                <p className="text-sm mb-3" style={{ color: 'var(--c-muted)' }}>Badges are a Pro feature. Unlock ranked achievements as you progress through your JEE preparation.</p>
+                <button onClick={() => window.location.href = '/pricing'}
+                  className="inline-flex items-center gap-1.5 text-white text-[12px] font-medium rounded-[40px] px-[18px] py-[7px] transition-all duration-200"
+                  style={{ background: 'var(--c-btn-primary)' }}>Upgrade to Pro</button>
               </div>
-            )
-          })()}
+            ) : (() => {
+              const totalDone = subjectsMeta.reduce((a, s) => a + s.chapters.done, 0)
+              const totalMinutes = dailyLogs.reduce((a, d) => a + d.studyMinutes, 0)
+              const totalHours = Math.round(totalMinutes / 60)
+              const totalQuestions = questionEntries.reduce((a, q) => a + q.count, 0)
+              const maxScoreTests = tests.filter(t => t.total > 0 && (t.score / t.total) >= 0.9).length
+              const totalRevisions = Object.values(progress).filter((p: any) => (p.revisionCount || 0) >= 1).length
+              const totalHighWeightage = subjectsMeta.reduce((a, s) => {
+                let hw = 0
+                for (const div of (syllabus[s.id as Subject] as any)?.divisions || []) {
+                  for (const ch of div.chapters) {
+                    if (!ch.deleted && ch.weightage === 'high' && progress[ch.id]?.status === 'done') hw++
+                  }
+                }
+                return a + hw
+              }, 0)
+              const clearedBacklog = backlogItems.filter(b => b.clearedAt).length
+              const BADGES = [
+                { id: 'inceptus', name: 'Inceptus — The Beginner', icon: '🌱', color: 'var(--c-green)', requirement: 'Complete 1 chapter', check: () => totalDone >= 1 },
+                { id: 'studiosus', name: 'Studiosus — The Scholar', icon: '📖', color: 'var(--c-blue)', requirement: 'Complete 5 chapters', check: () => totalDone >= 5 },
+                { id: 'peritus', name: 'Peritus — The Learned', icon: '📘', color: 'var(--c-indigo)', requirement: 'Complete 15 chapters', check: () => totalDone >= 15 },
+                { id: 'magister', name: 'Magister — The Master', icon: '⚡', color: 'var(--c-orange)', requirement: 'Complete 30 chapters', check: () => totalDone >= 30 },
+                { id: 'dominus', name: 'Dominus — The Lord', icon: '👑', color: 'var(--c-purple)', requirement: 'Complete 50 chapters', check: () => totalDone >= 50 },
+                { id: 'legatus', name: 'Legatus — The Commander', icon: '🏛️', color: 'var(--c-red)', requirement: 'Complete 75 chapters', check: () => totalDone >= 75 },
+                { id: 'invictus', name: 'Invictus — The Steadfast', icon: '🛡️', color: 'var(--c-green)', requirement: 'Maintain a 3-day streak', check: () => currentStreak >= 3 },
+                { id: 'fortis', name: 'Fortis — The Strong', icon: '💪', color: 'var(--c-blue)', requirement: 'Maintain a 7-day streak', check: () => currentStreak >= 7 },
+                { id: 'vigil', name: 'Vigil — The Watchful', icon: '🔮', color: 'var(--c-orange)', requirement: 'Maintain a 15-day streak', check: () => currentStreak >= 15 },
+                { id: 'tenax', name: 'Tenax — The Tenacious', icon: '🔥', color: 'var(--c-red)', requirement: 'Maintain a 30-day streak', check: () => currentStreak >= 30 },
+                { id: 'centurio', name: 'Centurio — The Centurion', icon: '⏱️', color: 'var(--c-blue)', requirement: 'Study 50 hours total', check: () => totalHours >= 50 },
+                { id: 'miles', name: 'Miles — The Soldier', icon: '⚔️', color: 'var(--c-green)', requirement: 'Solve 500 questions', check: () => totalQuestions >= 500 },
+                { id: 'sagitta', name: 'Sagitta — The Marksman', icon: '🏹', color: 'var(--c-orange)', requirement: 'Solve 1000 questions', check: () => totalQuestions >= 1000 },
+                { id: 'scutum', name: 'Scutum — The Shield', icon: '🛡️', color: 'var(--c-blue)', requirement: 'Reach 50% syllabus completion', check: () => overallPct >= 50 },
+                { id: 'corona', name: 'Corona — The Crown', icon: '👑', color: 'var(--c-orange)', requirement: 'Complete 100% syllabus', check: () => overallPct >= 100 },
+                { id: 'purgo', name: 'Purgo — The Cleanser', icon: '🧹', color: 'var(--c-green)', requirement: 'Clear 25 backlog items', check: () => clearedBacklog >= 25 },
+                { id: 'veritas', name: 'Veritas — The Truth', icon: '🎯', color: 'var(--c-blue)', requirement: 'Score 90%+ in a mock test', check: () => maxScoreTests >= 1 },
+                { id: 'sapientia', name: 'Sapientia — The Wise', icon: '🧠', color: 'var(--c-indigo)', requirement: 'Complete 5 revision cycles', check: () => totalRevisions >= 5 },
+                { id: 'ratio', name: 'Ratio — The Analyst', icon: '📊', color: 'var(--c-orange)', requirement: 'Log 20 mock tests', check: () => tests.length >= 20 },
+                { id: 'aeternus', name: 'Aeternus — The Eternal', icon: '♾️', color: 'var(--c-purple)', requirement: 'Study 100 days total', check: () => dailyLogs.length >= 100 },
+                { id: 'excelsior', name: 'Excelsior — Ever Upward', icon: '🚀', color: 'var(--c-green)', requirement: 'Earn 1000 XP', check: () => chapterXp >= 1000 },
+                { id: 'gloria', name: 'Gloria — The Glorious', icon: '🌟', color: 'var(--c-red)', requirement: 'Earn 5000 XP', check: () => chapterXp >= 5000 },
+                { id: 'furia', name: 'Furia — The Furious', icon: '💥', color: 'var(--c-red)', requirement: 'Complete 10 high-weightage chapters', check: () => totalHighWeightage >= 10 },
+                { id: 'pax', name: 'Pax — The Peaceful', icon: '🕊️', color: 'var(--c-green)', requirement: 'Study 200 hours total', check: () => totalHours >= 200 },
+              ] as const
+              const scroll = (dir: 'left' | 'right') => {
+                if (!scrollRef.current) return
+                const amt = 260
+                scrollRef.current.scrollBy({ left: dir === 'left' ? -amt : amt, behavior: 'smooth' })
+              }
+              const checkScroll = () => {
+                if (!scrollRef.current) return
+                setCanScrollLeft(scrollRef.current.scrollLeft > 10)
+                setCanScrollRight(scrollRef.current.scrollLeft < scrollRef.current.scrollWidth - scrollRef.current.clientWidth - 10)
+              }
+              return (
+                <div className="relative">
+                  {canScrollLeft && (
+                    <button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', color: 'var(--c-text)' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
+                    </button>
+                  )}
+                  {canScrollRight && (
+                    <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', color: 'var(--c-text)' }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                    </button>
+                  )}
+                  <div ref={scrollRef} onScroll={checkScroll} className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'thin', msOverflowStyle: '-ms-autohiding-scrollbar' }}>
+                    {BADGES.map((b) => {
+                      const unlocked = b.check()
+                      return (
+                        <div key={b.id} onClick={() => setBadgePopup({ name: b.name, icon: b.icon, desc: b.requirement, color: b.color, owned: unlocked, type: 'batch' })}
+                          className="flex-shrink-0 w-[180px] p-3 rounded-[14px] transition-all cursor-pointer hover:-translate-y-[1px]" style={{
+                            scrollSnapAlign: 'start',
+                            background: unlocked ? 'var(--c-card-alt)' : 'var(--c-card-alt)',
+                            border: `1px solid ${unlocked ? b.color : 'var(--c-border-card)'}`,
+                            opacity: unlocked ? 1 : 0.5,
+                            boxShadow: unlocked ? `0 0 12px ${b.color}20` : 'none',
+                          }}>
+                          <div className="text-2xl mb-2 text-center">{b.icon}</div>
+                          <div className="text-[11px] font-semibold text-center mb-1 truncate" style={{ color: unlocked ? b.color : 'var(--c-muted)' }}>
+                            {unlocked ? '✓ ' : ''}{b.name}
+                          </div>
+                          <p className="text-[9px] text-center mb-2" style={{ color: 'var(--c-caption)' }}>{b.requirement}</p>
+                          {unlocked && <div className="text-center text-[9px] font-medium" style={{ color: b.color }}>Unlocked</div>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <button onClick={() => scroll('left')} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }} disabled={!canScrollLeft}>←</button>
+                    <span className="text-[10px]" style={{ color: 'var(--c-caption)' }}>{BADGES.filter(b => b.check()).length}/{BADGES.length}</span>
+                    <button onClick={() => scroll('right')} className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }} disabled={!canScrollRight}>→</button>
+                  </div>
+                </div>
+              )
+            })()}
         </div>
 
         {/* ─── Daily Study Hour Calculator ─── */}

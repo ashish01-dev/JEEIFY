@@ -317,7 +317,7 @@ export default function SettingsPage() {
                     <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Feature Tour</div>
                     <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Replay the guided tour of the app</div>
                   </div>
-                  <button onClick={() => { update({ tourCompleted: false }); router.push('/dashboard') }}
+                  <button onClick={() => { update({ tourCompleted: false, tourReady: true }); sessionStorage.setItem('tour_forced', 'true'); router.push('/dashboard') }}
                     className="text-xs font-medium px-4 py-1.5 rounded-[40px] text-white transition-all"
                     style={{ background: 'var(--c-btn-primary)' }}
                   >Start Tour</button>
