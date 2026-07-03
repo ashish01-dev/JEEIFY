@@ -1,8 +1,12 @@
 'use client'
 
 import Link from 'next/link'
+import { useUser } from '@/lib/useUser'
 
-const FOOTER_LINKS = [
+interface FooterLink { label: string; href: string; protected?: boolean }
+interface FooterColumn { title: string; links: FooterLink[] }
+
+const FOOTER_LINKS: FooterColumn[] = [
   {
     title: 'Product',
     links: [
@@ -14,9 +18,9 @@ const FOOTER_LINKS = [
   {
     title: 'Explore',
     links: [
-      { label: 'Dashboard', href: '/dashboard' },
-      { label: 'Syllabus', href: '/syllabus' },
-      { label: 'Progress', href: '/progress' },
+      { label: 'Dashboard', href: '/dashboard', protected: true },
+      { label: 'Syllabus', href: '/syllabus', protected: true },
+      { label: 'Progress', href: '/progress', protected: true },
     ],
   },
   {
@@ -30,6 +34,14 @@ const FOOTER_LINKS = [
 ]
 
 export default function Footer() {
+  const { user } = useUser()
+
+  const handleProtectedClick = (e: React.MouseEvent) => {
+    if (user) return
+    e.preventDefault()
+    window.location.href = '/?signin=true'
+  }
+
   return (
     <footer style={{ background: 'var(--c-footer-bg)' }}>
       <div className="max-w-[1100px] mx-auto px-5 py-16 md:py-20">
@@ -50,13 +62,24 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {col.links.map(link => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-[13px] transition-colors duration-200 hover:text-white"
-                      style={{ color: 'var(--c-footer-muted)' }}
-                    >
-                      {link.label}
-                    </Link>
+                    {link.protected ? (
+                      <a
+                        href={link.href}
+                        onClick={handleProtectedClick}
+                        className="text-[13px] transition-colors duration-200 hover:text-white"
+                        style={{ color: 'var(--c-footer-muted)', cursor: 'pointer' }}
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-[13px] transition-colors duration-200 hover:text-white"
+                        style={{ color: 'var(--c-footer-muted)' }}
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
