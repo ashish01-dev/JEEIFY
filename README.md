@@ -4,7 +4,7 @@ A modern, all-in-one **JEE preparation platform** built with Next.js, TypeScript
 
 JEEIFY helps aspirants plan, track, and optimize their preparation with tools like syllabus tracking, smart roadmaps, timetable planning, analytics, pomodoro sessions, and test analysis — all in one clean dashboard experience.
 
-🌐 **Live Demo:** https://website-ten-hazel-i2529c4pzf.vercel.app
+🌐 **Live Demo:** https://jeeify.vercel.app
 
 ---
 
