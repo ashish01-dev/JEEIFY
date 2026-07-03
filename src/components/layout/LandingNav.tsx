@@ -155,13 +155,11 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
           )}
           </>
           )}
-          {loading ? null : (
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden flex flex-col items-center justify-center w-6 h-6 gap-[4px]" style={{ cursor: 'pointer' }}>
             <span style={{ backgroundColor: 'var(--c-text)' }} className={`block h-[1.5px] w-5 rounded transition-all duration-300 ${menuOpen ? 'rotate-45 translate-y-[2.5px]' : ''}`} />
             <span style={{ backgroundColor: 'var(--c-text)' }} className={`block h-[1.5px] w-5 rounded transition-all duration-300 ${menuOpen ? 'opacity-0' : ''}`} />
             <span style={{ backgroundColor: 'var(--c-text)' }} className={`block h-[1.5px] w-5 rounded transition-all duration-300 ${menuOpen ? '-rotate-45 -translate-y-[2.5px]' : ''}`} />
           </button>
-          )}
         </div>
       </div>
 

@@ -124,9 +124,9 @@ export default function OnboardingFlow() {
       const metaPending = user?.user_metadata?.onboarding_pending === true
       const metaCompleted = user?.user_metadata?.onboarded === true
       if (metaCompleted) {
-        update({ onboarded: true })
+        update({ onboarded: true, tourReady: true })
       } else if (!metaPending) {
-        update({ onboarded: true })
+        update({ onboarded: true, tourReady: true })
       }
       setCheckingOnboarded(false)
     })
@@ -140,9 +140,9 @@ export default function OnboardingFlow() {
       const metaPending = u?.user_metadata?.onboarding_pending === true
       const metaCompleted = u?.user_metadata?.onboarded === true
       if (metaCompleted) {
-        update({ onboarded: true })
+        update({ onboarded: true, tourReady: true })
       } else if (!metaPending) {
-        update({ onboarded: true })
+        update({ onboarded: true, tourReady: true })
       }
     })
     return () => subscription?.unsubscribe()
