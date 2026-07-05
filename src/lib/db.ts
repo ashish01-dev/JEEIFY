@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { UserProgress, TimetableData, TestEntry, ErrorEntry, FormulaEntry, DailyLog, PomodoroSession, DailyPlan, QuestionsEntry, ChapterProgress, Chapter, BacklogItem, PYQAttempt, StudySession } from '@/types'
+import type { UserProgress, TimetableData, TestEntry, ErrorEntry, FormulaEntry, DailyLog, PomodoroSession, DailyPlan, QuestionsEntry, ChapterProgress, Chapter, BacklogItem, PYQAttempt, StudySession, MockTestResult } from '@/types'
 import { syncUpsert, syncAdd, syncDelete, syncClear } from './supabase-sync'
 
 export class JeeDatabase extends Dexie {
@@ -19,6 +19,7 @@ export class JeeDatabase extends Dexie {
   backlog!: Table<BacklogItem, string>
   pyqAttempts!: Table<PYQAttempt, string>
   studySessions!: Table<StudySession, string>
+  pypMockResults!: Table<MockTestResult, string>
 
   constructor() {
     super('JEE2027Tracker')
@@ -39,6 +40,7 @@ export class JeeDatabase extends Dexie {
       backlog: '&id, chapterId, subject, dueDate',
       pyqAttempts: '&id, subject, chapterId, year, status',
       studySessions: '&id, date, subject',
+      pypMockResults: '&id',
     })
   }
 }
@@ -96,7 +98,7 @@ export const db = {
   backlog: useSync ? synced<BacklogItem>('backlog') : noop(),
   pyqAttempts: useSync ? synced<PYQAttempt>('pyqAttempts', 'id', 'pyqattempts') : noop(),
   studySessions: useSync ? synced<StudySession>('studySessions', 'id', 'studysessions') : noop(),
-
+  pypMockResults: useSync ? synced<MockTestResult>('pypMockResults') : noop(),
 }
 
 export { dexie }

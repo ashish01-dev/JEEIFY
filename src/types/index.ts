@@ -299,7 +299,7 @@ export interface BacklogItem {
 export interface PYQAttempt {
   id: string
   year: number
-  session: 'january' | 'april'
+  session: string
   subject: Subject
   chapterId: string
   chapterName: string
@@ -311,6 +311,32 @@ export interface PYQAttempt {
   attemptedAt?: string
   timeTaken?: number
   topic?: string
+  mockTestId?: string
+}
+
+export interface MockTestResult {
+  id: string
+  testId: string
+  testName: string
+  year: number
+  session: string
+  attemptedAt: string
+  timeTaken: number
+  totalQuestions: number
+  answered: number
+  correct: number
+  wrong: number
+  skipped: number
+  score: number
+  accuracy: number
+  subjectBreakdown: {
+    subject: Subject
+    total: number
+    correct: number
+    wrong: number
+    skipped: number
+  }[]
+  answers: { questionId: string; selectedOption: number; correct: boolean }[]
 }
 
 export type Language = 'en' | 'hi'

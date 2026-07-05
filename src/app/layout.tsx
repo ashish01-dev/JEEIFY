@@ -58,6 +58,7 @@ async function clearAllLocalData() {
     await dexie.backlog.clear()
     await dexie.pyqAttempts.clear()
     await dexie.studySessions.clear()
+    await dexie.pypMockResults.clear()
   } catch (err) { console.error('clearAllLocalData:', err) }
 }
 
