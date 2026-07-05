@@ -144,14 +144,14 @@ export default function PYQPage() {
   const mockStats = getMockStats()
   const mistakes = getRecentMistakes()
 
-  // Timer for mock tests
+  // Timer for mock tests — use ref to avoid stale closure
   useEffect(() => {
     if (mockStarted && !mockFinished && timeRemaining > 0) {
       timerRef.current = setInterval(() => {
         setTimeRemaining(t => {
           if (t <= 1) {
             clearInterval(timerRef.current!)
-            handleMockSubmit()
+            handleMockSubmitRef.current()
             return 0
           }
           return t - 1
@@ -314,6 +314,9 @@ export default function PYQPage() {
 
     setMockFinished(true)
   }, [mockQuestions, mockAnswers, currentMock, recordAttempt, recordMockResult, timeRemaining])
+
+  const handleMockSubmitRef = useRef(handleMockSubmit)
+  handleMockSubmitRef.current = handleMockSubmit
 
   const formatTime = (s: number) => {
     const h = Math.floor(s / 3600)
@@ -738,7 +741,7 @@ export default function PYQPage() {
         {/* TAB: ANALYTICS */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {tab === 'analytics' && (
-          <div className="space-y-5">
+          <div className="space-y-5" style={{ contentVisibility: 'auto' as any }}>
             {/* Top stats row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>

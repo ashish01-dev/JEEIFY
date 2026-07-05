@@ -20,7 +20,7 @@ export default function PrivacyPage() {
       <nav className="relative max-w-[1100px] mx-auto w-full px-5 py-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-[9px]">
-            <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" style={{ height: 24, filter: 'var(--c-logo-filter)' }} />
+            <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" loading="lazy" decoding="async" style={{ height: 24, filter: 'var(--c-logo-filter)' }} />
             <span className="text-[18px] font-bold tracking-[-0.3px]" style={{ color: 'var(--c-text)' }}>JEEIFY</span>
           </Link>
         </div>

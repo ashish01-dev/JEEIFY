@@ -6,7 +6,7 @@ import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import { useSettingsStore } from '@/store/settingsStore'
-import { db } from '@/lib/db'
+import { db, dexie } from '@/lib/db'
 import { downloadJSON } from '@/lib/utils'
 import { getSupabase } from '@/lib/supabase'
 import CustomizePopup from '@/components/dashboard/CustomizePopup'
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                 style={{ border: '2px solid rgba(0,0,0,0.06)', cursor: uploading ? 'not-allowed' : 'pointer' }}
               >
                 {avatarDisplay ? (
-                  <img src={avatarDisplay} alt="" className="w-full h-full object-cover" />
+                  <img src={avatarDisplay} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xl font-semibold" style={{ background: 'var(--c-tag)', color: 'var(--c-muted)' }}>
                     {(settings.name || 'U').charAt(0).toUpperCase()}
@@ -527,7 +527,7 @@ export default function SettingsPage() {
               {user ? (
                 <>
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {avatarDisplay && <img src={avatarDisplay} alt="" className="w-8 h-8 rounded-full object-cover" />}
+                    {avatarDisplay && <img src={avatarDisplay} alt="" className="w-8 h-8 rounded-full object-cover" loading="eager" fetchPriority="high" />}
                     <div className="min-w-0">
                       <div className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>{user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.given_name || user.email?.split('@')[0] || 'User'}</div>
                       <div className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Signed in</div>
@@ -621,39 +621,49 @@ export default function SettingsPage() {
             background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)',
           }}>
             <h2 className="text-[15px] font-semibold mb-4" style={{ color: 'var(--c-text)' }}>Delete Account</h2>
-            {!showDeleteAccount ? (
-              <div>
-                <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-                <button onClick={() => setShowDeleteAccount(true)}
-                  className="text-xs font-medium px-4 py-2 rounded-[40px] transition-all"
-                  style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-red)' }}
-                >Delete Account</button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs" style={{ color: 'var(--c-red)' }}>
-                  Type <strong>DELETE ACCOUNT</strong> to confirm permanent deletion:
-                </p>
-                <input
-                  value={deleteAccountConfirm}
-                  onChange={e => setDeleteAccountConfirm(e.target.value)}
-                  className="w-full px-3 py-2 text-xs outline-none rounded-[40px]"
+            <div>
+              <p className="text-xs mb-3" style={{ color: 'var(--c-muted)' }}>
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </p>
+              <button onClick={() => setShowDeleteAccount(true)}
+                className="text-xs font-medium px-4 py-2 rounded-[40px] transition-all"
+                style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-red)' }}
+              >Delete Account</button>
+            </div>
+          </div>
+
+          {/* Delete Account Popup */}
+          {showDeleteAccount && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40" style={{ backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+              <div className="mx-4 w-full max-w-sm rounded-[18px] p-6 animate-scale-in" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow-hover)' }}>
+                <div className="text-center mb-5">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: 'rgba(224,62,62,0.1)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e03e3e" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                  </div>
+                  <h3 className="text-[17px] font-bold" style={{ color: 'var(--c-text)' }}>Delete Your Account?</h3>
+                  <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+                    All your data — progress, tests, PYQ attempts, backlog items, and settings — will be permanently erased. Your account will be deleted and you will be signed out. This cannot be undone.
+                  </p>
+                </div>
+                <input value={deleteAccountConfirm} onChange={e => setDeleteAccountConfirm(e.target.value)}
+                  className="w-full px-4 py-2.5 text-xs outline-none rounded-[40px] mb-4 text-center"
                   style={{ border: '1px solid #e03e3e', color: 'var(--c-text)', background: 'var(--c-input)' }}
-                  placeholder="DELETE ACCOUNT"
+                  placeholder="Type DELETE ACCOUNT to confirm"
                   disabled={deletingAccount}
                 />
-                <div className="flex gap-2">
-                  <button
-                    onClick={async () => {
+                <div className="flex gap-3">
+                  <button onClick={() => { setShowDeleteAccount(false); setDeleteAccountConfirm('') }}
+                    className="flex-1 text-xs font-medium py-2.5 rounded-[40px] transition-all"
+                    style={{ border: '1px solid var(--c-border)', color: 'var(--c-text-secondary)' }}
+                  >Cancel</button>
+                  <button onClick={async () => {
                       if (deleteAccountConfirm !== 'DELETE ACCOUNT' || deletingAccount) return
                       setDeletingAccount(true)
                       try {
                         const res = await fetch('/api/delete-account', { method: 'POST' })
                         if (!res.ok) {
                           const err = await res.json().catch(() => ({ error: 'Unknown error' }))
-                          console.warn('Server-side account deletion failed (likely unconfigured). Proceeding with local cleanup.', err.error)
+                          console.warn('Server-side deletion failed. Proceeding with local cleanup.', err.error)
                         }
                         await db.progress.clear()
                         await db.timetable.clear()
@@ -667,29 +677,26 @@ export default function SettingsPage() {
                         await db.backlog.clear()
                         await db.pyqAttempts.clear()
                         await db.studySessions.clear()
+                        await db.pypMockResults.clear()
+                        await db.customChapters.clear()
+                        await db.aiRecommendations.clear()
+                        await dexie.vaultFiles.clear()
                         await db.settings.clear()
                         localStorage.removeItem('jee-theme')
                         sessionStorage.setItem('voluntary_logout', 'true')
                         const sb = getSupabase()
                         if (sb) await sb.auth.signOut()
                         window.location.href = '/'
-                      } catch (err) {
-                        alert('Something went wrong. Please try again.')
-                        setDeletingAccount(false)
-                      }
+                      } catch { alert('Something went wrong. Please try again.'); setDeletingAccount(false) }
                     }}
                     disabled={deleteAccountConfirm !== 'DELETE ACCOUNT' || deletingAccount}
-                    className="text-xs font-medium px-4 py-1.5 rounded-[40px] disabled:opacity-40"
-                    style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-red)' }}
-                  >{deletingAccount ? 'Deleting...' : 'Confirm Delete'}</button>
-                  <button onClick={() => { setShowDeleteAccount(false); setDeleteAccountConfirm('') }}
-                    className="text-xs font-medium px-4 py-1.5 rounded-[40px]"
-                    style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-text-secondary)' }}
-                  >Cancel</button>
+                    className="flex-1 text-xs font-medium py-2.5 rounded-[40px] text-white disabled:opacity-40 transition-all"
+                    style={{ background: deletingAccount ? 'var(--c-muted)' : '#e03e3e' }}
+                  >{deletingAccount ? 'Deleting...' : 'Delete & Sign Out'}</button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
         </div>
       </div>

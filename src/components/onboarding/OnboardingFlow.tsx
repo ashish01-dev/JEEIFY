@@ -307,7 +307,7 @@ export default function OnboardingFlow() {
               }}
             >
               {avatarDataUrl ? (
-                <img src={avatarDataUrl} alt="" className="w-full h-full object-cover" />
+                <img src={avatarDataUrl} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
               ) : (
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

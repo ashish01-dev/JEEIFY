@@ -35,6 +35,8 @@ export default function MockTestPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const endedRef = useRef(false)
+  const timeRemainingRef = useRef(timeRemaining)
+  timeRemainingRef.current = timeRemaining
 
   const currentQ = questions[currentIdx]
   const selectedOption = currentQ ? answers[currentQ.id] : undefined
@@ -91,6 +93,9 @@ export default function MockTestPage() {
     const skipped: string[] = []
     const answerDetails: MockTestResult['answers'] = []
 
+    const curTimeRemaining = timeRemainingRef.current
+    const curAnsweredCount = Object.keys(answers).length
+
     questions.forEach(q => {
       const sel = answers[q.id]
       const isCorrect = sel === q.correctOptionIndex
@@ -122,14 +127,14 @@ export default function MockTestPage() {
       year: def?.year || 2026,
       session: def?.session || 'Practice',
       attemptedAt: new Date().toISOString(),
-      timeTaken: duration * 60 - timeRemaining,
+      timeTaken: duration * 60 - curTimeRemaining,
       totalQuestions: total,
-      answered: answeredCount,
+      answered: curAnsweredCount,
       correct: correct.length,
       wrong: wrong.length,
       skipped: skipped.length,
       score: correct.length * 4 - wrong.length,
-      accuracy: answeredCount > 0 ? Math.round((correct.length / answeredCount) * 100) : 0,
+      accuracy: curAnsweredCount > 0 ? Math.round((correct.length / curAnsweredCount) * 100) : 0,
       subjectBreakdown: Object.entries(subjectMap).map(([subject, data]) => ({
         subject: subject as Subject,
         ...data,
@@ -163,7 +168,7 @@ export default function MockTestPage() {
 
     setSubmitting(false)
     router.push(`/mock-test/${id}/results`)
-  }, [id, def, questions, answers, answeredCount, total, duration, timeRemaining, recordMockResult, submitted, submitting, router])
+  }, [id, def, questions, answers, total, duration, recordMockResult, submitted, submitting, router])
 
   if (!def) {
     return (

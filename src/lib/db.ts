@@ -52,7 +52,7 @@ const TABLE_KEY = {
   progress: 'chapterId', timetable: 'id', tests: 'id', errors: 'id',
   formulas: 'id', dailylogs: 'date', settings: 'id', pomodoro: 'id',
   dailyplans: 'date', questions: 'id', customchapters: 'id', airecommendations: 'id',
-  backlog: 'id', pyqattempts: 'id', studysessions: 'id',
+  backlog: 'id', pyqattempts: 'id', studysessions: 'id', pypmockresults: 'id',
 } as Record<string, string>
 
 function synced<T>(dexieKey: string, keyField?: string, supabaseTable?: string) {
@@ -98,7 +98,7 @@ export const db = {
   backlog: useSync ? synced<BacklogItem>('backlog') : noop(),
   pyqAttempts: useSync ? synced<PYQAttempt>('pyqAttempts', 'id', 'pyqattempts') : noop(),
   studySessions: useSync ? synced<StudySession>('studySessions', 'id', 'studysessions') : noop(),
-  pypMockResults: useSync ? synced<MockTestResult>('pypMockResults') : noop(),
+  pypMockResults: useSync ? synced<MockTestResult>('pypMockResults', 'id', 'pypmockresults') : noop(),
 }
 
 export { dexie }

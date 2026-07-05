@@ -63,7 +63,7 @@ export default function LandingNav({ active }: { active?: 'pricing' | 'about' })
           boxShadow: 'var(--c-shadow-nav)',
         }}>
         <Link href="/" className="flex items-center gap-[7px] flex-shrink-0">
-          <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" fetchPriority="high" style={{ height: 20, filter: 'var(--c-logo-filter)' }} />
+          <img src="https://pub-f170a2592d2c4a1485466404c36807be.r2.dev/Tests/logoipsum-415.svg" alt="logo" fetchPriority="high" loading="lazy" decoding="async" style={{ height: 20, filter: 'var(--c-logo-filter)' }} />
           <span className="text-[16px] font-bold tracking-[-0.2px]" style={{ color: 'var(--c-text)' }}>JEEIFY</span>
         </Link>
 

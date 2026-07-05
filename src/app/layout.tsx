@@ -24,12 +24,12 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 const TABLE_KEYS: Record<string, string> = {
   progress: 'chapterId', timetable: 'id', tests: 'id', errors: 'id',
   formulas: 'id', dailylogs: 'date', settings: 'id',
-  dailyplans: 'date', questions: 'id', backlog: 'id', pyqattempts: 'id', studysessions: 'id',
+  dailyplans: 'date', questions: 'id', backlog: 'id', pyqattempts: 'id', studysessions: 'id', pypmockresults: 'id',
 }
 const SUPABASE_TO_DEXIE: Record<string, keyof typeof db> = {
   progress: 'progress', timetable: 'timetable', tests: 'tests', errors: 'errors',
   formulas: 'formulas', dailylogs: 'dailyLogs', settings: 'settings',
-  dailyplans: 'dailyPlans', questions: 'questions', backlog: 'backlog', pyqAttempts: 'pyqAttempts', studySessions: 'studySessions',
+  dailyplans: 'dailyPlans', questions: 'questions', backlog: 'backlog', pyqAttempts: 'pyqAttempts', studySessions: 'studySessions', pypmockresults: 'pypMockResults',
 }
 
 async function fillLocalFromCloud() {
