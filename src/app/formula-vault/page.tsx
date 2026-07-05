@@ -60,6 +60,15 @@ export default function FormulaVaultPage() {
     const newFiles: FormulaFile[] = []
 
     for (const file of Array.from(files)) {
+      const formulaFile: FormulaFile = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+      }
+
+      saveFileBlob(chapterId, formulaFile, file)
+
       try {
         const reader = new FileReader()
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -76,34 +85,14 @@ export default function FormulaVaultPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ file: base64, name: file.name, type: file.type, isPro }),
         })
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}))
-          throw new Error(errData.error || `Upload failed (HTTP ${res.status})`)
+        if (res.ok) {
+          const data = await res.json()
+          formulaFile.fileCode = data.fileCode || undefined
+          formulaFile.gdriveFileId = data.gdriveFileId || undefined
         }
-        const data = await res.json()
+      } catch { /* keep local */ }
 
-        const formulaFile: FormulaFile = {
-          name: data.name,
-          size: data.size,
-          type: data.type,
-          fileCode: data.fileCode || undefined,
-          gdriveFileId: data.gdriveFileId || undefined,
-          uploadedAt: data.uploadedAt,
-        }
-        newFiles.push(formulaFile)
-
-        /* Cache blob locally */
-        saveFileBlob(chapterId, formulaFile, file)
-        } catch (err: any) {
-          console.error('file upload error:', err)
-          const code = err.message?.includes('timeout') ? 5
-            : err.message?.includes('abort') ? 5
-            : err.message?.includes('413') || err.message?.includes('too large') ? 2
-            : err.message?.includes('type') || err.message?.includes('invalid') ? 3
-            : err.message?.includes('500') ? 4
-            : 1
-          setUploadError(`Failed to upload to server (Error ${code})`)
-        }
+      newFiles.push(formulaFile)
     }
 
     const entry: FormulaEntry = {

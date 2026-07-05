@@ -32,7 +32,6 @@ const DASHBOARD_TOGGLES: { key: keyof ReturnType<typeof useSettingsStore.getStat
 const FEATURE_TOGGLES: { key: keyof ReturnType<typeof useSettingsStore.getState>['settings']; label: string; desc: string }[] = [
   { key: 'hideFloatTimer', label: 'Floating Study Timer', desc: 'Pomodoro timer on all pages' },
   { key: 'hideAITutor', label: 'AI Tutor Panel', desc: 'AI assistant floating button' },
-  { key: 'hideSidebarLabels', label: 'Sidebar Text Labels', desc: 'Icon-only sidebar' },
 ]
 
 export default function CustomizePopup({ onClose }: Props) {

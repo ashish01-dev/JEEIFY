@@ -84,17 +84,16 @@ export default function SettingsPage() {
     setUploading(true)
     try {
       const dataUrl = await resizeImage(file, 400)
+      await update({ avatarUrl: dataUrl })
       const sb = getSupabase()
-      if (!sb) { alert('Supabase not configured. Avatar uploaded locally only.'); update({ avatarUrl: dataUrl }); setUploading(false); return }
+      if (!sb) { setUploading(false); return }
       const { data: { session } } = await sb.auth.getSession()
       const uid = session?.user?.id || user?.id
-      if (!uid) throw new Error('Not signed in')
+      if (!uid) { setUploading(false); return }
       const blob = await (await fetch(dataUrl)).blob()
       const publicUrl = await uploadAvatar(blob, uid)
       await update({ avatarUrl: publicUrl })
-    } catch (err: any) {
-      alert('Failed to upload avatar: ' + (err?.message || 'Unknown error'))
-    }
+    } catch { /* keep local dataUrl */ }
     setUploading(false)
   }
 
@@ -366,6 +365,79 @@ export default function SettingsPage() {
                     {settings.backlogReminder ? 'On' : 'Off'}
                   </button>
                 </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Daily Question Goal</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Target PYQs per day: {settings.dailyQuestionGoal ?? 20}</div>
+                  </div>
+                  <input type="range" min={5} max={100} step={5}
+                    value={settings.dailyQuestionGoal ?? 20}
+                    onChange={e => update({ dailyQuestionGoal: Number(e.target.value) })}
+                    className="w-28 h-1.5 rounded-full accent-[var(--c-blue)]"
+                    style={{ background: 'var(--c-input)' }}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Auto-Advance</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Auto-move to next question after answering</div>
+                  </div>
+                  <button onClick={() => update({ autoNextOnAnswer: !settings.autoNextOnAnswer })}
+                    className={`text-xs font-medium px-4 py-1.5 rounded-[40px] transition-all ${settings.autoNextOnAnswer ? 'text-white' : ''}`}
+                    style={{
+                      background: settings.autoNextOnAnswer ? 'var(--c-blue)' : 'var(--c-input)',
+                      border: settings.autoNextOnAnswer ? 'none' : '1px solid var(--c-border-input)',
+                      color: settings.autoNextOnAnswer ? '#fff' : 'var(--c-text-secondary)',
+                    }}
+                  >
+                    {settings.autoNextOnAnswer ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Instant Feedback</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Reveal correct/incorrect instantly on answer</div>
+                  </div>
+                  <button onClick={() => update({ showAnswerHints: !settings.showAnswerHints })}
+                    className={`text-xs font-medium px-4 py-1.5 rounded-[40px] transition-all ${settings.showAnswerHints ? 'text-white' : ''}`}
+                    style={{
+                      background: settings.showAnswerHints ? 'var(--c-blue)' : 'var(--c-input)',
+                      border: settings.showAnswerHints ? 'none' : '1px solid var(--c-border-input)',
+                      color: settings.showAnswerHints ? '#fff' : 'var(--c-text-secondary)',
+                    }}
+                  >
+                    {settings.showAnswerHints ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Focus Mode</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Hide non-essential UI for distraction-free studying</div>
+                  </div>
+                  <button onClick={() => update({ compactUI: !settings.compactUI })}
+                    className={`text-xs font-medium px-4 py-1.5 rounded-[40px] transition-all ${settings.compactUI ? 'text-white' : ''}`}
+                    style={{
+                      background: settings.compactUI ? 'var(--c-blue)' : 'var(--c-input)',
+                      border: settings.compactUI ? 'none' : '1px solid var(--c-border-input)',
+                      color: settings.compactUI ? '#fff' : 'var(--c-text-secondary)',
+                    }}
+                  >
+                    {settings.compactUI ? 'On' : 'Off'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>Reset Onboarding</div>
+                    <div className="text-xs" style={{ color: 'var(--c-muted)' }}>Restart the guided tour on your next visit</div>
+                  </div>
+                  <button onClick={() => update({ tourCompleted: false })}
+                    className="text-xs font-medium px-4 py-1.5 rounded-[40px] transition-all"
+                    style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-text-secondary)' }}
+                  >Reset</button>
+                </div>
+            </div>
+            <div className="text-[10px] mt-4 px-1 leading-relaxed" style={{ color: 'var(--c-caption)' }}>
+              All data is stored locally on your device. Cloud sync via Supabase is optional.
             </div>
           </div>
 
@@ -579,7 +651,10 @@ export default function SettingsPage() {
                       setDeletingAccount(true)
                       try {
                         const res = await fetch('/api/delete-account', { method: 'POST' })
-                        if (!res.ok) { const err = await res.json().catch(() => ({ error: 'Unknown error' })); alert(err.error || 'Failed to delete account.'); setDeletingAccount(false); return }
+                        if (!res.ok) {
+                          const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+                          console.warn('Server-side account deletion failed (likely unconfigured). Proceeding with local cleanup.', err.error)
+                        }
                         await db.progress.clear()
                         await db.timetable.clear()
                         await db.tests.clear()

@@ -67,7 +67,8 @@ export default function MockTestPage() {
       else next.add(currentQ.id)
       return next
     })
-  }, [currentQ])
+    setCurrentIdx(i => Math.min(questions.length - 1, i + 1))
+  }, [currentQ, questions.length])
 
   const handleOption = useCallback((optionIndex: number) => {
     if (!currentQ) return

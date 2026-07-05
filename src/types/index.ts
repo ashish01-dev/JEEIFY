@@ -218,6 +218,10 @@ export interface Settings {
   hideFloatTimer?: boolean
   hideAITutor?: boolean
   hideSidebarLabels?: boolean
+  dailyQuestionGoal?: number
+  autoNextOnAnswer?: boolean
+  showAnswerHints?: boolean
+  compactUI?: boolean
   hideSidebarPYQ?: boolean
   hideSidebarBacklog?: boolean
   hideSidebarJournal?: boolean
