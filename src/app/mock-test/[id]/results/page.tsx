@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { MOCK_TESTS, ALL_PYQS, type PYQEntry } from '@/data/pyqs'
 import type { MockTestResult, Subject } from '@/types'
@@ -18,6 +18,7 @@ export default function MockResultsPage() {
   const [result, setResult] = useState<MockTestResult | null>(null)
   const [expandedQ, setExpandedQ] = useState<number | null>(null)
   const [stats, setStats] = useState<ReturnType<typeof getMockStats>>({ total: 0, avgScore: 0, avgAccuracy: 0, bestScore: 0, trend: [] })
+  const loadedRef = useRef(false)
 
   useEffect(() => {
     /* Try session storage first (fresh submit) */
@@ -26,13 +27,20 @@ export default function MockResultsPage() {
       const parsed = JSON.parse(stored)
       setResult(parsed)
       sessionStorage.removeItem('mock_result_' + id)
-    } else {
-      /* Fallback: load from store */
+      setStats(getMockStats())
+      return
+    }
+
+    /* Ensure data is loaded from IndexedDB before reading */
+    const loadAndFind = async () => {
+      const { load } = usePYQStore.getState()
+      if (!loadedRef.current) { await load(); loadedRef.current = true }
       const allResults = usePYQStore.getState().mockResults
       const found = allResults.filter(r => r.testId === id).sort((a, b) => new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime())[0]
       if (found) setResult(found)
+      setStats(usePYQStore.getState().getMockStats())
     }
-    setStats(getMockStats())
+    loadAndFind()
   }, [id, getMockStats])
 
   if (!result) {
@@ -40,7 +48,7 @@ export default function MockResultsPage() {
       <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--c-bg)' }}>
         <div className="text-center p-8">
           <p className="text-lg mb-4" style={{ color: 'var(--c-text)' }}>No results found</p>
-          <button onClick={() => router.push('/pyq')} className="px-5 py-2 rounded-[40px] text-white text-sm font-medium" style={{ background: 'var(--c-btn-primary)' }}>
+          <button onClick={() => { if (window.history.length > 1) router.back(); else window.close() }} className="px-5 py-2 rounded-[40px] text-white text-sm font-medium" style={{ background: 'var(--c-btn-primary)' }}>
             Back to PYQs
           </button>
         </div>

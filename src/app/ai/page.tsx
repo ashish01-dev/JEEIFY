@@ -148,6 +148,7 @@ export default function AIPage() {
   const [sessions, setSessions] = useState<StudySession[]>([])
   const [backlogItems, setBacklogItems] = useState<BacklogItem[]>([])
   const pyqMistakes = usePYQStore(s => s.getRecentMistakes())
+  const mockResults = usePYQStore(s => s.mockResults)
 
   useEffect(() => {
     db.tests.toArray().then(setTests).catch(() => setTests([]))
@@ -196,17 +197,29 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
 
   const subjectPerformance = useMemo(() => {
     const result: Record<Subject, { avgAccuracy: number; trend: 'up' | 'down' | 'stable'; testCount: number }> = { physics: { avgAccuracy: 0, trend: 'stable', testCount: 0 }, chemistry: { avgAccuracy: 0, trend: 'stable', testCount: 0 }, maths: { avgAccuracy: 0, trend: 'stable', testCount: 0 } }
-    const bySubject: Record<Subject, TestEntry[]> = { physics: [], chemistry: [], maths: [] }
-    for (const t of tests) { if (bySubject[t.subject]) bySubject[t.subject].push(t) }
+    const bySubject: Record<Subject, { accuracy: number; date: string }[]> = { physics: [], chemistry: [], maths: [] }
+    for (const t of tests) {
+      const sub = t.subject
+      if (!bySubject[sub]) continue
+      const acc = t.total > 0 ? (t.score / t.total) * 100 : 0
+      bySubject[sub].push({ accuracy: acc, date: t.date })
+    }
+    for (const mr of mockResults) {
+      for (const sb of mr.subjectBreakdown) {
+        const answered = sb.correct + sb.wrong
+        if (answered === 0) continue
+        bySubject[sb.subject].push({ accuracy: Math.round((sb.correct / answered) * 100), date: mr.attemptedAt?.slice(0, 10) || '' })
+      }
+    }
     for (const sub of SUBJECTS) {
       const subTests = bySubject[sub]
       if (subTests.length === 0) continue
       result[sub].testCount = subTests.length
-      const accuracies = subTests.map(t => t.total > 0 ? (t.score / t.total) * 100 : 0)
+      const accuracies = subTests.map(t => t.accuracy)
       result[sub].avgAccuracy = Math.round(accuracies.reduce((a, b) => a + b, 0) / accuracies.length)
       if (subTests.length >= 2) {
         const sorted = [...subTests].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        const scores = sorted.map(t => t.total > 0 ? (t.score / t.total) * 100 : 0)
+        const scores = sorted.map(t => t.accuracy)
         const recent = scores.slice(0, Math.min(3, scores.length))
         const older = scores.slice(Math.min(3, scores.length))
         const rAvg = recent.reduce((a, b) => a + b, 0) / recent.length
@@ -215,7 +228,7 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
       }
     }
     return result
-  }, [tests])
+  }, [tests, mockResults])
 
   const overallTestScore = useMemo(() => {
     const all = tests.filter(t => t.total > 0)

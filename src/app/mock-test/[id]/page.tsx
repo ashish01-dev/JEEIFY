@@ -170,7 +170,7 @@ export default function MockTestPage() {
       <div className="flex items-center justify-center min-h-screen" style={{ background: 'var(--c-bg)' }}>
         <div className="text-center p-8">
           <p className="text-lg mb-4" style={{ color: 'var(--c-text)' }}>Mock test not found</p>
-          <button onClick={() => router.push('/pyq')} className="px-5 py-2 rounded-[40px] text-white text-sm font-medium" style={{ background: 'var(--c-btn-primary)' }}>
+          <button onClick={() => { if (window.history.length > 1) router.back(); else window.close() }} className="px-5 py-2 rounded-[40px] text-white text-sm font-medium" style={{ background: 'var(--c-btn-primary)' }}>
             Back to PYQs
           </button>
         </div>

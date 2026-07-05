@@ -496,7 +496,7 @@ export default function PYQPage() {
             </div>
           ) : (
             /* Chapter list (full width) when no chapter selected */
-            <div className="max-w-2xl mx-auto w-full">
+            <div className="w-full">
               {/* Subject tabs */}
               <div className="flex gap-2 mb-5">
                 {SUBJECTS.map(s => (
