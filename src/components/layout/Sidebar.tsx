@@ -53,15 +53,15 @@ const Sidebar = memo(function Sidebar() {
     {/* Hamburger button — mobile only */}
     <button
       onClick={() => setMobileOpen(true)}
-      className="md:hidden fixed top-3 left-3 z-50 w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+      className="md:hidden fixed top-3 left-3 z-[100] w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
       style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)', boxShadow: 'var(--c-shadow)' }}
       aria-label="Open navigation"
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-text)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="18" x2="21" y2="18" />
-      </svg>
+      <div className="flex flex-col items-center justify-center gap-[3px] w-[18px] h-[18px]">
+        <span className="w-full h-0.5 rounded-full" style={{ background: 'var(--c-text)' }} />
+        <span className="w-full h-0.5 rounded-full" style={{ background: 'var(--c-text)' }} />
+        <span className="w-full h-0.5 rounded-full" style={{ background: 'var(--c-text)' }} />
+      </div>
     </button>
 
     {/* Mobile drawer overlay */}

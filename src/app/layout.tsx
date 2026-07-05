@@ -155,7 +155,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const { load: loadTimetable } = useTimetableStore()
   const pathname = usePathname()
   const [userName, setUserName] = useState<string | null>(null)
-  const APP_PATHS = ['/dashboard', '/syllabus', '/timetable', '/progress', '/completion', '/activity', '/questions', '/tests', '/revision', '/formula-vault', '/settings', '/ai', '/pyq', '/backlog']
+  const APP_PATHS = ['/dashboard', '/syllabus', '/timetable', '/progress', '/completion', '/activity', '/questions', '/tests', '/revision', '/formula-vault', '/settings', '/ai', '/pyq', '/backlog', '/mock-test']
   const isAppPage = APP_PATHS.some(p => {
     if (p === '/ai') return pathname === '/ai'
     return pathname.startsWith(p)

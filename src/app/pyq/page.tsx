@@ -164,13 +164,7 @@ export default function PYQPage() {
 
   // Mock test handlers
   const startMock = (id: string) => {
-    setMockTestId(id)
-    setMockStarted(true)
-    setMockFinished(false)
-    setMockAnswers({})
-    setMockResult(null)
-    const mock = MOCK_TESTS.find(m => m.id === id)
-    if (mock) setTimeRemaining(mock.durationMinutes * 60)
+    window.open(`/mock-test/${id}`, '_blank')
   }
 
   const handleMockAnswer = (qId: string, optIdx: number) => {

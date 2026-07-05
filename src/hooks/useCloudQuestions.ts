@@ -61,7 +61,7 @@ export function useCloudMockQuestions(mockTestId: string): { questions: PYQEntry
         }
       })
       .catch(() => { /* keep local fallback */ })
-  }, [mockTestId])
+  }, [mockTestId, mock])
 
   return result
 }

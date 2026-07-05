@@ -157,6 +157,19 @@ export default function DashboardTour() {
   }, [started])
 
   const currentStep = TOUR_STEPS[step]
+  const [popupAnchor, setPopupAnchor] = useState<'bottom' | 'top'>('bottom')
+
+  /* Determine popup position based on target location */
+  useEffect(() => {
+    if (!targetRect) return
+    const vh = window.innerHeight
+    const midpoint = vh / 2
+    if (targetRect.top < midpoint) {
+      setPopupAnchor('bottom')
+    } else {
+      setPopupAnchor('top')
+    }
+  }, [targetRect])
 
   /* Navigate to correct page + find target element */
   useEffect(() => {
@@ -329,10 +342,10 @@ export default function DashboardTour() {
       {phase === 'showing' && (
         <motion.div
           key={step}
-          initial={{ opacity: 0, y: 24, scale: 0.95 }}
+          initial={{ opacity: 0, y: popupAnchor === 'bottom' ? 24 : -24, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[440px] max-w-[calc(100vw-32px)] rounded-[18px] p-5 z-[210]"
+          className={`fixed ${popupAnchor === 'bottom' ? 'bottom-4 md:bottom-8' : 'top-4 md:top-8'} left-1/2 -translate-x-1/2 w-[360px] md:w-[440px] max-w-[calc(100vw-24px)] rounded-[18px] p-4 md:p-5 z-[210]`}
           style={{
             background: 'var(--c-card)',
             border: '1px solid var(--c-border-card)',
