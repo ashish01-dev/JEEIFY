@@ -19,6 +19,7 @@ interface PYQState {
   getChapterwiseCount: () => { chapterId: string; chapterName: string; subject: Subject; total: number; correct: number }[]
   getMockStats: () => { total: number; avgScore: number; avgAccuracy: number; bestScore: number; trend: { label: string; accuracy: number }[] }
   getRecentMistakes: () => PYQAttempt[]
+  updateNotes: (id: string, notes: string) => Promise<void>
 }
 
 export const usePYQStore = create<PYQState>((set, get) => ({
@@ -161,5 +162,12 @@ export const usePYQStore = create<PYQState>((set, get) => ({
       .filter(a => a.status === 'wrong')
       .sort((a, b) => (b.attemptedAt || '').localeCompare(a.attemptedAt || ''))
       .slice(0, 10)
+  },
+
+  updateNotes: async (id: string, notes: string) => {
+    const attempts = get().attempts.map(a => a.id === id ? { ...a, notes } : a)
+    set({ attempts })
+    const item = attempts.find(a => a.id === id)
+    if (item) await db.pyqAttempts.put(item)
   },
 }))

@@ -8,11 +8,23 @@ import { usePYQStore } from '@/store/pyqStore'
 import { useCloudQuestions, useCloudMockQuestions } from '@/hooks/useCloudQuestions'
 import { ALL_PYQS, getPYQsByChapter, MOCK_TESTS, CHAPTER_NAMES } from '@/data/pyqs'
 import syllabusData from '@/data/syllabus.json'
-import type { Subject, PYQAttempt } from '@/types'
+import type { Subject } from '@/types'
+import type { PYQAttempt } from '@/types'
 import { formatDate } from '@/lib/utils'
 import { db } from '@/lib/db'
 
 const syllabus = syllabusData as unknown as { physics: { divisions: { chapters: { id: string; name: string }[] }[] }; chemistry: { divisions: { chapters: { id: string; name: string }[] }[] }; maths: { divisions: { chapters: { id: string; name: string }[] }[] } }
+
+const PYQ_INFO_DATA: Record<string, { title: string; body: string }> = {
+  questions_solved: { title: 'How Questions Solved is counted', body: 'Total number of PYQ questions you\'ve attempted (correct + wrong). Each attempt on a question increments this counter by one.' },
+  accuracy: { title: 'How Overall Accuracy is calculated', body: 'Accuracy = (correct answers ÷ total answered) × 100. Only answered questions count — skipped questions are excluded. A higher percentage means better performance.' },
+  mock_tests: { title: 'How Mock Test stats are calculated', body: 'Total count of mock tests completed. Average accuracy is the mean accuracy across all tests. Best score is your highest percentage-based score.' },
+  bookmarked: { title: 'How Bookmarks work', body: 'Questions you\'ve bookmarked for future review. Toggle the bookmark icon while viewing a question to add or remove it from this list.' },
+  subject_perf: { title: 'How Subject Performance is calculated', body: 'Average accuracy across all PYQ attempts for each subject. Higher accuracy indicates stronger command of that subject\'s chapters.' },
+  chapter_solved: { title: 'How Chapters Solved per subject works', body: 'Breakdown of questions attempted per chapter across all subjects. Shows correct vs wrong counts and per-chapter accuracy percentage.' },
+  mock_trend: { title: 'How Mock Test Trend works', body: 'Shows accuracy trend for your last 7 mock tests. Each bar represents one test. Green = 70%+, Orange = 40–70%, Red = below 40%.' },
+  mistakes: { title: 'How Recent Mistakes are tracked', body: 'Your most recent wrong answers from PYQ practice. Click any mistake to jump directly to that question, review what you got wrong, and add notes for future revision.' },
+}
 
 const SUBJECTS: Subject[] = ['physics', 'chemistry', 'maths']
 const SUBJECT_META: Record<Subject, { emoji: string; color: string; label: string }> = {
@@ -23,8 +35,25 @@ const SUBJECT_META: Record<Subject, { emoji: string; color: string; label: strin
 
 type Tab = 'practice' | 'mock' | 'analytics'
 
+function InfoPopup({ section, onClose }: { section: string; onClose: () => void }) {
+  const data = PYQ_INFO_DATA[section]
+  if (!data) return null
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40" style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} onClick={onClose}>
+      <div className="max-w-sm mx-4 rounded-[18px] p-6 animate-scale-in" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow-hover)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold" style={{ color: 'var(--c-text)' }}>{data.title}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.1]" style={{ color: 'var(--c-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-text-secondary)' }}>{data.body}</p>
+        <button onClick={onClose} className="mt-5 w-full py-2.5 text-sm font-semibold rounded-[40px] text-white transition-opacity hover:opacity-90" style={{ background: 'var(--c-btn-primary)' }}>Got it</button>
+      </div>
+    </div>
+  )
+}
+
 export default function PYQPage() {
-  const { attempts, mockResults, loaded, load, recordAttempt, recordMockResult, toggleBookmark, getStats, getSubjectStats, getChapterwiseCount, getMockStats, getRecentMistakes } = usePYQStore()
+  const { attempts, mockResults, loaded, load, recordAttempt, recordMockResult, toggleBookmark, getStats, getSubjectStats, getChapterwiseCount, getMockStats, getRecentMistakes, updateNotes } = usePYQStore()
   const [tab, setTab] = useState<Tab>('practice')
   const [subject, setSubject] = useState<Subject>('physics')
   const [chapterId, setChapterId] = useState('')
@@ -33,6 +62,9 @@ export default function PYQPage() {
   const [showResult, setShowResult] = useState(false)
   const [showAnswers, setShowAnswers] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
+
+  // Info popup state
+  const [infoSection, setInfoSection] = useState<string | null>(null)
 
   // Mock test state
   const [mockTestId, setMockTestId] = useState('')
@@ -54,15 +86,53 @@ export default function PYQPage() {
     return all
   }, [subject])
 
-  useEffect(() => {
-    if (!chapterId && chapters.length > 0) setChapterId(chapters[0].id)
-  }, [chapters, chapterId])
+  // Notes state for current question
+  const [noteText, setNoteText] = useState('')
+
+  // Navigate to a specific mistake from analytics
+  const navigateToMistake = useCallback((m: PYQAttempt) => {
+    setSubject(m.subject)
+    setChapterId(m.chapterId)
+    setCurrentIdx(0)
+    setSelectedAnswer(m.options?.indexOf(m.userAnswer || '') ?? null)
+    setShowResult(true)
+    setShowAnswers(true)
+    setNoteText(m.notes || '')
+    setTab('practice')
+  }, [])
 
   useEffect(() => { load() }, [load])
+
+  // Handle navigation from AI error hub
+  useEffect(() => {
+    const stored = sessionStorage.getItem('pyq_navigate_mistake')
+    if (stored) {
+      try {
+        const data = JSON.parse(stored)
+        if (data.subject && data.chapterName) {
+          setSubject(data.subject as Subject)
+          const ch = chapters.find(c => c.name === data.chapterName)
+          if (ch) setChapterId(ch.id)
+          setTab('practice')
+        }
+      } catch {}
+      sessionStorage.removeItem('pyq_navigate_mistake')
+    }
+  }, [chapters])
 
   const currentChapter = chapters.find(c => c.id === chapterId)
   const { questions, source: cloudSource } = useCloudQuestions(tab === 'practice' ? subject : undefined, tab === 'practice' ? chapterId : undefined)
   const currentQ = questions[currentIdx]
+
+  const currentAttempt = currentQ ? attempts.find(a => a.question === currentQ.question && (a.status === 'wrong' || a.status === 'correct')) : null
+
+  useEffect(() => {
+    if (currentAttempt) setNoteText(currentAttempt.notes || '')
+  }, [currentAttempt, currentIdx])
+
+  const saveNote = useCallback(async () => {
+    if (currentAttempt) await updateNotes(currentAttempt.id, noteText)
+  }, [currentAttempt, noteText, updateNotes])
 
   // Mock test questions — use cloud-backed hook
   const currentMock = useMemo(() => MOCK_TESTS.find(m => m.id === mockTestId), [mockTestId])
@@ -302,59 +372,14 @@ export default function PYQPage() {
         {/* TAB: PRACTICE */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {tab === 'practice' && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-            {/* Left sidebar: subject + chapters */}
-            <div className="lg:col-span-1 space-y-3">
-              <div className="rounded-[18px] px-4 py-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <div className="flex gap-1.5 mb-3">
-                  {SUBJECTS.map(s => (
-                    <button key={s} onClick={() => { setSubject(s); setChapterId(''); setCurrentIdx(0); setSelectedAnswer(null); setShowResult(false) }}
-                      className={`flex-1 text-[10px] font-medium py-1.5 rounded-[40px] transition-all`}
-                      style={{ background: subject === s ? SUBJECT_META[s].color : 'var(--c-tag)', color: subject === s ? '#fff' : 'var(--c-muted)' }}
-                    >{SUBJECT_META[s].emoji} {s[0].toUpperCase()}</button>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Chapters</span>
-                  <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>{chapterStats.filter(c => c.subject === subject).length} attempted</span>
-                </div>
-                <div className="space-y-0.5 max-h-[50vh] overflow-y-auto">
-                  {chapters.map(ch => {
-                    const chStat = chapterStats.find(c => c.chapterId === ch.id)
-                    const qCount = getPYQsByChapter(ch.id).length
-                    return (
-                      <button key={ch.id} onClick={() => { setChapterId(ch.id); setCurrentIdx(0); setSelectedAnswer(null); setShowResult(false) }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-[10px] transition-all ${chapterId === ch.id ? 'font-medium' : ''}`}
-                        style={{
-                          color: chapterId === ch.id ? 'var(--c-text)' : 'var(--c-text-secondary)',
-                          background: chapterId === ch.id ? 'var(--c-tag)' : 'transparent',
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] truncate">{ch.name}</span>
-                          <span className="text-[9px] shrink-0 ml-1" style={{ color: 'var(--c-caption)' }}>{qCount}Q</span>
-                        </div>
-                        {chStat && (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[9px]" style={{ color: 'var(--c-green)' }}>✅{chStat.correct}</span>
-                            <span className="text-[9px]" style={{ color: 'var(--c-red)' }}>❌{chStat.total - chStat.correct}</span>
-                          </div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Right: question area */}
-            <div className="lg:col-span-3">
+          chapterId ? (
+            /* Full-screen question view when chapter is selected */
+            <div className="w-full">
               {currentQ ? (
                 <div className="rounded-[18px] px-5 py-5 md:px-6 md:py-6" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
                   {/* Back button + meta bar */}
                   <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      {/* Back button */}
                       <button onClick={resetQuestion}
                         className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.1]"
                         style={{ color: 'var(--c-muted)' }}
@@ -378,7 +403,6 @@ export default function PYQPage() {
                           ✅{thisChapterStats.correct} ❌{thisChapterStats.total - thisChapterStats.correct}
                         </span>
                       )}
-                      {/* Bookmark */}
                       <button onClick={handleBookmark} className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.1]"
                         style={{ color: bookmarked ? 'var(--c-orange)' : 'var(--c-muted)' }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -441,22 +465,87 @@ export default function PYQPage() {
                       >{currentIdx < questions.length - 1 ? 'Next →' : 'Done ✓'}</button>
                     </div>
                   </div>
+
+                  {/* Notes section — shown after answering */}
+                  {showResult && currentAttempt && (
+                    <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Your Notes</span>
+                        <button onClick={saveNote}
+                          className="text-[10px] font-medium px-2.5 py-1 rounded-[40px] text-white transition-all hover:opacity-90"
+                          style={{ background: 'var(--c-btn-primary)' }}
+                        >{currentAttempt.notes === noteText ? 'Save Note' : 'Save'}</button>
+                      </div>
+                      <textarea value={noteText} onChange={e => setNoteText(e.target.value)}
+                        placeholder="Add a note about this question (what went wrong, tips, etc.)..."
+                        className="w-full text-xs px-3 py-2 rounded-[12px] outline-none resize-none"
+                        style={{ border: '1px solid var(--c-border-input)', color: 'var(--c-text)', background: 'var(--c-input)', minHeight: '60px' }}
+                        onFocus={e => { e.currentTarget.style.borderColor = 'var(--c-blue)' }}
+                        onBlur={e => { e.currentTarget.style.borderColor = 'var(--c-border-input)' }}
+                      />
+                    </div>
+                  )}
                 </div>
-              ) : chapterId ? (
+              ) : (
                 <div className="rounded-[18px] px-6 py-12 text-center" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
                   <div className="text-4xl mb-3">📭</div>
                   <p className="text-sm" style={{ color: 'var(--c-muted)' }}>No PYQs loaded for this chapter yet. Select a different chapter.</p>
                   <p className="text-[11px] mt-1" style={{ color: 'var(--c-caption)' }}>We add new questions in every update.</p>
                 </div>
-              ) : (
-                <div className="rounded-[18px] px-6 py-12 text-center" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                  <div className="text-4xl mb-3">📝</div>
-                  <p className="text-sm" style={{ color: 'var(--c-muted)' }}>Select a chapter from the left to begin practicing PYQs</p>
-                  <p className="text-[11px] mt-1" style={{ color: 'var(--c-caption)' }}>{ALL_PYQS.length} questions across 3 subjects · 2024–2026</p>
-                </div>
               )}
             </div>
-          </div>
+          ) : (
+            /* Chapter list (full width) when no chapter selected */
+            <div className="max-w-2xl mx-auto w-full">
+              {/* Subject tabs */}
+              <div className="flex gap-2 mb-5">
+                {SUBJECTS.map(s => (
+                  <button key={s} onClick={() => { setSubject(s); setCurrentIdx(0); setSelectedAnswer(null); setShowResult(false) }}
+                    className={`flex-1 text-xs font-medium py-2 rounded-[40px] transition-all`}
+                    style={{ background: subject === s ? SUBJECT_META[s].color : 'var(--c-tag)', color: subject === s ? '#fff' : 'var(--c-muted)' }}
+                  >{SUBJECT_META[s].emoji} {SUBJECT_META[s].label}</button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between mb-3 px-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Chapters</span>
+                <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>{chapterStats.filter(c => c.subject === subject).length} attempted · {ALL_PYQS.length} PYQs</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {chapters.map(ch => {
+                  const chStat = chapterStats.find(c => c.chapterId === ch.id)
+                  const qCount = getPYQsByChapter(ch.id).length
+                  return (
+                    <button key={ch.id} onClick={() => { setChapterId(ch.id); setCurrentIdx(0); setSelectedAnswer(null); setShowResult(false) }}
+                      className="rounded-[18px] px-4 py-4 text-left transition-all hover:-translate-y-[1px]"
+                      style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium truncate" style={{ color: 'var(--c-text)' }}>{ch.name}</span>
+                        <span className="text-[10px] shrink-0 ml-2 px-2 py-0.5 rounded-full" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>{qCount} Q</span>
+                      </div>
+                      {chStat ? (
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <span style={{ color: 'var(--c-green)' }}>✅ {chStat.correct}</span>
+                          <span style={{ color: 'var(--c-red)' }}>❌ {chStat.total - chStat.correct}</span>
+                          <span className="font-medium" style={{ color: 'var(--c-blue)' }}>{chStat.total > 0 ? Math.round((chStat.correct / chStat.total) * 100) : 0}%</span>
+                        </div>
+                      ) : (
+                        <p className="text-[11px]" style={{ color: 'var(--c-caption)' }}>Not started yet</p>
+                      )}
+                      <div className="mt-2.5 w-full h-1 rounded-full overflow-hidden" style={{ background: 'var(--c-tag)' }}>
+                        <div className="h-full rounded-full transition-all" style={{
+                          width: `${chStat ? Math.round((chStat.correct / Math.max(chStat.total, 1)) * 100) : 0}%`,
+                          background: SUBJECT_META[subject].color,
+                        }} />
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -466,8 +555,8 @@ export default function PYQPage() {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {MOCK_TESTS.map(mt => {
-                const prevResult = mockResults.filter(r => r.testId === mt.id)
-                const best = prevResult.length > 0 ? Math.max(...prevResult.map(r => r.score)) : null
+                const prevResults = mockResults.filter(r => r.testId === mt.id).sort((a, b) => new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime())
+                const last = prevResults.length > 0 ? prevResults[0] : null
                 const qCount = mt.questionIds.length
                 return (
                   <div key={mt.id} className="rounded-[18px] p-5 transition-all hover:-translate-y-[1px]" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
@@ -479,18 +568,31 @@ export default function PYQPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--c-tag)', color: 'var(--c-muted)' }}>
                         {mt.session.includes('Subject') ? 'Subject' : mt.session.includes('Practice') ? 'Practice' : 'Full Mock'}
                       </span>
-                      {best !== null && (
-                        <span className="text-[10px] font-medium" style={{ color: 'var(--c-green)' }}>Best: {best}%</span>
+                      {last && (
+                        <button onClick={() => window.open(`/mock-test/${mt.id}/results`, '_blank')}
+                          className="text-[10px] font-medium px-2 py-0.5 rounded-[40px] transition-all hover:opacity-80"
+                          style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--c-green)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                          Last: {last.score}pts · {last.accuracy}%
+                        </button>
                       )}
                     </div>
-                    <button onClick={() => startMock(mt.id)}
-                      className="w-full text-xs font-medium py-2 rounded-[40px] text-white transition-all hover:-translate-y-[0.5px]"
-                      style={{ background: 'var(--c-btn-primary)' }}
-                    >{prevResult.length > 0 ? 'Retake' : 'Start Test'}</button>
+                    <div className="flex gap-2">
+                      {last && (
+                        <button onClick={() => window.open(`/mock-test/${mt.id}/results`, '_blank')}
+                          className="flex-1 text-[10px] font-medium py-2 rounded-[40px] transition-all hover:-translate-y-[0.5px]"
+                          style={{ border: '1px solid var(--c-border)', color: 'var(--c-text-secondary)' }}>
+                          View Result
+                        </button>
+                      )}
+                      <button onClick={() => startMock(mt.id)}
+                        className={`${last ? 'flex-1' : 'w-full'} text-xs font-medium py-2 rounded-[40px] text-white transition-all hover:-translate-y-[0.5px]`}
+                        style={{ background: 'var(--c-btn-primary)' }}
+                      >{prevResults.length > 0 ? 'Retake' : 'Start Test'}</button>
+                    </div>
                   </div>
                 )
               })}
@@ -640,24 +742,36 @@ export default function PYQPage() {
             {/* Top stats row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--c-caption)' }}>Questions Solved</p>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Questions Solved</p>
+                  <button onClick={() => setInfoSection('questions_solved')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-[24px] font-bold" style={{ color: 'var(--c-blue)' }}>{stats.total}</p>
                 <p className="text-[10px]" style={{ color: 'var(--c-muted)' }}>✅ {stats.correct} · ❌ {stats.wrong}</p>
               </div>
               <div className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--c-caption)' }}>Overall Accuracy</p>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Overall Accuracy</p>
+                  <button onClick={() => setInfoSection('accuracy')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-[24px] font-bold" style={{ color: stats.accuracy >= 70 ? 'var(--c-green)' : stats.accuracy >= 40 ? 'var(--c-orange)' : 'var(--c-red)' }}>{stats.accuracy}%</p>
                 <div className="w-full h-1.5 rounded-full mt-1" style={{ background: 'var(--c-tag)' }}>
                   <div className="h-full rounded-full transition-all" style={{ width: `${stats.accuracy}%`, background: stats.accuracy >= 70 ? 'var(--c-green)' : stats.accuracy >= 40 ? 'var(--c-orange)' : 'var(--c-red)' }} />
                 </div>
               </div>
               <div className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--c-caption)' }}>Mock Tests</p>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Mock Tests</p>
+                  <button onClick={() => setInfoSection('mock_tests')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-[24px] font-bold" style={{ color: 'var(--c-blue)' }}>{mockStats.total}</p>
                 <p className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Avg: {mockStats.avgAccuracy}% · Best: {mockStats.bestScore}%</p>
               </div>
               <div className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--c-caption)' }}>Bookmarked</p>
+                <div className="flex items-center gap-1 mb-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Bookmarked</p>
+                  <button onClick={() => setInfoSection('bookmarked')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <p className="text-[24px] font-bold" style={{ color: 'var(--c-orange)' }}>{stats.bookmarked}</p>
                 <p className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Questions to revisit</p>
               </div>
@@ -670,7 +784,10 @@ export default function PYQPage() {
                 return (
                   <div key={sub} className="rounded-[18px] p-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold" style={{ color: SUBJECT_META[sub].color }}>{SUBJECT_META[sub].emoji} {SUBJECT_META[sub].label}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-semibold" style={{ color: SUBJECT_META[sub].color }}>{SUBJECT_META[sub].emoji} {SUBJECT_META[sub].label}</span>
+                        <button onClick={() => setInfoSection('subject_perf')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                      </div>
                       <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>{ss.total} solved</span>
                     </div>
                     <div className="flex items-center justify-between text-[11px] mb-2">
@@ -688,7 +805,10 @@ export default function PYQPage() {
 
             {/* Chapter-wise solved */}
             <div className="rounded-[18px] p-5" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-              <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--c-text)' }}>📚 Questions Solved per Chapter</h3>
+              <div className="flex items-center gap-1 mb-3">
+                <h3 className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>📚 Questions Solved per Chapter</h3>
+                <button onClick={() => setInfoSection('chapter_solved')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+              </div>
               {chapterStats.length === 0 ? (
                 <p className="text-xs" style={{ color: 'var(--c-muted)' }}>No questions solved yet. Start practicing!</p>
               ) : (
@@ -713,7 +833,10 @@ export default function PYQPage() {
             {/* Mock test trend */}
             {mockStats.trend.length > 0 && (
               <div className="rounded-[18px] p-5" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--c-text)' }}>📈 Mock Test Trend (Last 7)</h3>
+                <div className="flex items-center gap-1 mb-3">
+                  <h3 className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>📈 Mock Test Trend (Last 7)</h3>
+                  <button onClick={() => setInfoSection('mock_trend')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                </div>
                 <div className="flex items-end gap-2 h-24">
                   {mockStats.trend.map((t, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -729,26 +852,51 @@ export default function PYQPage() {
               </div>
             )}
 
-            {/* Recent mistakes */}
+            {/* Recent mistakes — clickable */}
             {mistakes.length > 0 && (
               <div className="rounded-[18px] p-5" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--c-text)' }}>❌ Recent Mistakes</h3>
-                <div className="space-y-2 max-h-[250px] overflow-y-auto">
-                  {mistakes.map(m => (
-                    <div key={m.id} className="text-xs py-2 border-b last:border-b-0" style={{ borderColor: 'var(--c-border)' }}>
-                      <div className="flex items-start gap-2">
-                        <span className="text-[10px] mt-0.5" style={{ color: SUBJECT_META[m.subject as Subject].color }}>
-                          {SUBJECT_META[m.subject as Subject].emoji}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate" style={{ color: 'var(--c-text)' }}>{m.question}</p>
-                          <p className="text-[10px] mt-0.5" style={{ color: 'var(--c-red)' }}>
-                            You: {m.userAnswer || '—'} · Correct: {m.correctAnswer}
-                          </p>
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-1">
+                    <h3 className="text-sm font-semibold" style={{ color: 'var(--c-text)' }}>❌ Recent Mistakes</h3>
+                    <button onClick={() => setInfoSection('mistakes')} className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
+                  {currentAttempt && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--c-green)' }}>
+                      Note: {noteText ? 'Saved' : 'None'}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                  {mistakes.map(m => {
+                    const q = ALL_PYQS.find(pq => pq.question === m.question)
+                    return (
+                      <button key={m.id} onClick={() => navigateToMistake(m)}
+                        className="w-full text-left text-xs py-2.5 px-3 rounded-[12px] transition-all border-b last:border-b-0 hover:-translate-y-[0.5px]"
+                        style={{ borderColor: 'var(--c-border)', background: 'transparent' }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-[10px] mt-0.5" style={{ color: SUBJECT_META[m.subject as Subject].color }}>
+                            {SUBJECT_META[m.subject as Subject].emoji}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-medium truncate" style={{ color: 'var(--c-text)' }}>{m.question}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--c-red)' }}>
+                                You: {m.userAnswer || '—'}
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(16,185,129,0.1)', color: 'var(--c-green)' }}>
+                                Correct: {m.correctAnswer}
+                              </span>
+                              <span className="text-[9px] ml-auto" style={{ color: 'var(--c-caption)' }}>{m.chapterName}</span>
+                            </div>
+                            {m.notes && (
+                              <p className="text-[9px] mt-1 italic" style={{ color: 'var(--c-orange)' }}>📝 {m.notes}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -756,6 +904,7 @@ export default function PYQPage() {
         )}
 
       </div>
+      {infoSection && <InfoPopup section={infoSection} onClose={() => setInfoSection(null)} />}
     </div>
   )
 }

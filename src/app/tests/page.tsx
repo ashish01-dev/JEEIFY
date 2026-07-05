@@ -11,6 +11,14 @@ import { useSettingsStore } from '@/store/settingsStore'
 import syllabusData from '@/data/syllabus.json'
 import type { TestEntry, Subject, Chapter } from '@/types'
 
+const TEST_INFO_DATA: Record<string, { title: string; body: string }> = {
+  tests_taken: { title: 'How Tests Taken is counted', body: 'Total number of tests you\'ve logged, including manually entered tests and auto-logged mock tests from the PYQ practice section.' },
+  avg_accuracy: { title: 'How Average Accuracy is calculated', body: 'Mean accuracy across all logged tests. Accuracy per test = (Score ÷ Total) × 100. Higher average means consistent performance.' },
+  best_score: { title: 'How Best Score is determined', body: 'Your single highest-scoring test by percentage. Shows the test with the best ratio of score to total marks.' },
+  trend: { title: 'How Trend is calculated', body: 'Compares your latest test accuracy to your earliest test accuracy among the last 5 tests. Upward (↗) means improvement; downward (↘) means decline.' },
+  score_trend: { title: 'How the Score Trend chart works', body: 'Each bar represents one test, ordered chronologically. Bar height = score percentage. Green = 80%+, Orange = 60–79%, Red = below 60%. Hover to see details.' },
+}
+
 const syllabus = syllabusData as unknown as { [key in Subject]: { divisions: { chapters: Chapter[] }[] } }
 
 function getFlatChapters(subject: Subject): Chapter[] {
@@ -24,6 +32,23 @@ function getFlatChapters(subject: Subject): Chapter[] {
 }
 
 const ALL_SUBJECTS: Subject[] = ['physics', 'chemistry', 'maths']
+
+function InfoPopup({ section, onClose }: { section: string; onClose: () => void }) {
+  const data = TEST_INFO_DATA[section]
+  if (!data) return null
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40" style={{ backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }} onClick={onClose}>
+      <div className="max-w-sm mx-4 rounded-[18px] p-6 animate-scale-in" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow-hover)' }} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold" style={{ color: 'var(--c-text)' }}>{data.title}</h3>
+          <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-black/[0.05] dark:hover:bg-white/[0.1]" style={{ color: 'var(--c-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <p className="text-[13px] leading-relaxed" style={{ color: 'var(--c-text-secondary)' }}>{data.body}</p>
+        <button onClick={onClose} className="mt-5 w-full py-2.5 text-sm font-semibold rounded-[40px] text-white transition-opacity hover:opacity-90" style={{ background: 'var(--c-btn-primary)' }}>Got it</button>
+      </div>
+    </div>
+  )
+}
 
 export default function TestsPage() {
   const { settings } = useSettingsStore()
@@ -39,6 +64,7 @@ export default function TestsPage() {
   const [formTotal, setFormTotal] = useState('50')
   const [formTime, setFormTime] = useState('')
   const [scoreError, setScoreError] = useState('')
+  const [infoSection, setInfoSection] = useState<string | null>(null)
 
   const activeSubjects = selectedSubjects.length > 0 ? selectedSubjects : ['physics' as Subject]
 
@@ -110,19 +136,31 @@ export default function TestsPage() {
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <div className="rounded-[14px] px-4 py-3" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)' }}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c-caption)' }}>Tests Taken</div>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Tests Taken</div>
+                    <button onClick={() => setInfoSection('tests_taken')} className="w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <div className="text-xl font-bold" style={{ color: 'var(--c-blue)' }}>{tests.length}</div>
                 </div>
                 <div className="rounded-[14px] px-4 py-3" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)' }}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c-caption)' }}>Avg Accuracy</div>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Avg Accuracy</div>
+                    <button onClick={() => setInfoSection('avg_accuracy')} className="w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <div className="text-xl font-bold" style={{ color: avgAccuracy >= 80 ? 'var(--c-green)' : avgAccuracy >= 60 ? 'var(--c-orange)' : 'var(--c-red)' }}>{avgAccuracy}%</div>
                 </div>
                 <div className="rounded-[14px] px-4 py-3" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)' }}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c-caption)' }}>Best Score</div>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Best Score</div>
+                    <button onClick={() => setInfoSection('best_score')} className="w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <div className="text-xl font-bold" style={{ color: 'var(--c-green)' }}>{best.score}/{best.total}<span className="text-sm font-normal" style={{ color: 'var(--c-muted)' }}> ({best.accuracy}%)</span></div>
                 </div>
                 <div className="rounded-[14px] px-4 py-3" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)' }}>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--c-caption)' }}>Trend ({recent.length})</div>
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--c-caption)' }}>Trend ({recent.length})</div>
+                    <button onClick={() => setInfoSection('trend')} className="w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <div className="text-xl font-bold" style={{ color: trend >= 0 ? 'var(--c-green)' : 'var(--c-red)' }}>
                     {trend >= 0 ? '↗' : '↘'} {Math.abs(trend)}%
                   </div>
@@ -132,7 +170,10 @@ export default function TestsPage() {
               {/* Score Trend Mini Chart */}
               {sorted.length >= 2 && (
                 <div className="rounded-[18px] px-5 py-4 mb-4" style={{ background: 'var(--c-card)', border: '1px solid var(--c-border-card)', boxShadow: 'var(--c-shadow)' }}>
-                  <h3 className="text-[12px] font-semibold mb-3" style={{ color: 'var(--c-text)' }}>Score Trend</h3>
+                  <div className="flex items-center gap-1 mb-3">
+                    <h3 className="text-[12px] font-semibold" style={{ color: 'var(--c-text)' }}>Score Trend</h3>
+                    <button onClick={() => setInfoSection('score_trend')} className="w-3 h-3 rounded-full flex items-center justify-center text-[6px] font-bold transition-opacity hover:opacity-70" style={{ background: 'var(--c-tag)', color: 'var(--c-caption)' }}>i</button>
+                  </div>
                   <div className="flex items-end gap-1" style={{ height: '80px' }}>
                     {sorted.map((t, i) => {
                       const pct = Math.round((t.score / t.total) * 100)
@@ -294,27 +335,37 @@ export default function TestsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tests.slice().reverse().map(t => (
-                      <tr key={t.id}>
-                        <td className="text-sm p-2" style={{ color: 'var(--c-text)' }}>{t.date}</td>
-                        <td className="p-2">
-                          <div className="flex flex-wrap gap-1">
-                            {(t.subjects || [t.subject]).map(s => (
-                              <span key={s} className="text-[10px] font-medium uppercase px-1 py-0.5 rounded" style={{
-                                color: s === 'physics' ? 'var(--c-blue)' : s === 'chemistry' ? 'var(--c-green)' : 'var(--c-orange)',
-                                backgroundColor: `${s === 'physics' ? 'var(--c-blue)' : s === 'chemistry' ? 'var(--c-green)' : 'var(--c-orange)'}15`
-                              }}>{s}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="text-sm font-medium p-2" style={{ color: 'var(--c-text)' }}>{t.score}/{t.total}</td>
-                        <td className={`text-sm hidden md:table-cell p-2`} style={{
-                          color: t.accuracy >= 80 ? 'var(--c-green)' : t.accuracy >= 60 ? 'var(--c-orange)' : 'var(--c-red)',
-                        }}>
-                          {t.accuracy}%
-                        </td>
-                      </tr>
-                    ))}
+                    {tests.slice().reverse().map(t => {
+                      const isMock = t.notes?.startsWith('Mock:')
+                      const mockParts = isMock ? (t.notes || '').split(':') : []
+                      const mockId = mockParts[1] || ''
+                      const mockResultId = mockParts[2] || ''
+                      return (
+                        <tr key={t.id} onClick={() => { if (isMock && mockId) window.open(`/mock-test/${mockId}/results`, '_blank') }}
+                          className={`${isMock ? 'cursor-pointer' : ''} transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]`}>
+                          <td className="text-sm p-2" style={{ color: 'var(--c-text)' }}>
+                            {t.date}
+                            {isMock && <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--c-red)' }}>Mock</span>}
+                          </td>
+                          <td className="p-2">
+                            <div className="flex flex-wrap gap-1">
+                              {(t.subjects || [t.subject]).map(s => (
+                                <span key={s} className="text-[10px] font-medium uppercase px-1 py-0.5 rounded" style={{
+                                  color: s === 'physics' ? 'var(--c-blue)' : s === 'chemistry' ? 'var(--c-green)' : 'var(--c-orange)',
+                                  backgroundColor: `${s === 'physics' ? 'var(--c-blue)' : s === 'chemistry' ? 'var(--c-green)' : 'var(--c-orange)'}15`
+                                }}>{s}</span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="text-sm font-medium p-2" style={{ color: 'var(--c-text)' }}>{t.score}/{t.total}</td>
+                          <td className={`text-sm hidden md:table-cell p-2`} style={{
+                            color: t.accuracy >= 80 ? 'var(--c-green)' : t.accuracy >= 60 ? 'var(--c-orange)' : 'var(--c-red)',
+                          }}>
+                            {t.accuracy}%
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -323,6 +374,7 @@ export default function TestsPage() {
         </div>
       </div>
       <ConfettiOverlay fire={showConfetti} message={`Well done ${settings.name || 'champ'}!`} onDone={() => setShowConfetti(false)} />
+      {infoSection && <InfoPopup section={infoSection} onClose={() => setInfoSection(null)} />}
     </div>
   )
 }

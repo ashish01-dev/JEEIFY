@@ -7,6 +7,7 @@ import { useProgressStore } from '@/store/progressStore'
 import { useGamificationStore } from '@/store/gamificationStore'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useUser } from '@/lib/useUser'
+import { usePYQStore } from '@/store/pyqStore'
 import { db } from '@/lib/db'
 import Link from 'next/link'
 import Sidebar from '@/components/layout/Sidebar'
@@ -146,6 +147,7 @@ export default function AIPage() {
   const [tests, setTests] = useState<TestEntry[]>([])
   const [sessions, setSessions] = useState<StudySession[]>([])
   const [backlogItems, setBacklogItems] = useState<BacklogItem[]>([])
+  const pyqMistakes = usePYQStore(s => s.getRecentMistakes())
 
   useEffect(() => {
     db.tests.toArray().then(setTests).catch(() => setTests([]))
@@ -154,7 +156,7 @@ export default function AIPage() {
   }, [])
 
   useEffect(() => { if (localStorage.getItem('ai_beta_acknowledged')) setShowBeta(false) }, [])
-  useEffect(() => { if (!progressLoaded) return; const t = setTimeout(() => setAiLoading(false), 1200); return () => clearTimeout(t) }, [progressLoaded])
+  useEffect(() => { const t = setTimeout(() => setAiLoading(false), 2500); return () => clearTimeout(t) }, [])
 
   const handleBetaAcknowledge = useCallback(() => { localStorage.setItem('ai_beta_acknowledged', '1'); setShowBeta(false) }, [])
   const [availableHours, setAvailableHours] = useState(settings.dailyStudyHours || 6)
@@ -224,7 +226,7 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
   }, [tests])
 
   const mistakeLog = useMemo(() => {
-    const entries: { id: string; subject: Subject; chapterName: string; errorType: string; difficulty: string; daysAgo: number }[] = []
+    const entries: { id: string; subject: Subject; chapterName: string; errorType: string; difficulty: string; daysAgo: number; pyqMistake?: boolean; question?: string }[] = []
     for (const { subject, chapter, daysSince, retention } of decayData.items) {
       if (retention >= 45) continue
       entries.push({ id: `decay-${chapter.id}`, subject, chapterName: chapter.name, errorType: 'Conceptual', difficulty: retention < 30 ? 'HARD' : 'MEDIUM', daysAgo: daysSince })
@@ -238,9 +240,12 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
       if (daysSince <= 21 || retention >= 60) continue
       entries.push({ id: `memory-${chapter.id}`, subject, chapterName: chapter.name, errorType: 'Memory Loss', difficulty: daysSince > 60 ? 'HARD' : 'EASY', daysAgo: daysSince })
     }
+    for (const m of pyqMistakes) {
+      entries.push({ id: `pyq-${m.id}`, subject: m.subject, chapterName: m.chapterName, errorType: 'PYQ Mistake', difficulty: 'MEDIUM', daysAgo: m.attemptedAt ? Math.round((today.getTime() - new Date(m.attemptedAt).getTime()) / 86400000) : 0, pyqMistake: true, question: m.question })
+    }
     entries.sort((a, b) => a.daysAgo - b.daysAgo)
-    return entries.slice(0, 8)
-  }, [decayData, tests])
+    return entries.slice(0, 12)
+  }, [decayData, tests, pyqMistakes])
 
   const miniStats = useMemo(() => {
     const mins = sessions.filter(s => s.duration > 0).map(s => s.duration)
@@ -329,7 +334,7 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
     return plan
   }, [todayRecommendations])
 
-  const dataLoaded = progressLoaded && gamificationLoaded && !aiLoading
+  const dataLoaded = !aiLoading
 
   function RetentionBar({ retention, h }: { retention: number; h: number }) {
     const c = retention < 50 ? 'var(--c-red)' : retention < 70 ? 'var(--c-orange)' : 'var(--c-green)'
@@ -499,18 +504,32 @@ const [infoSection, setInfoSection] = useState<string | null>(null)
                     </tr></thead>
                     <tbody>
                       {mistakeLog.map((m) => {
-                        const c = m.errorType === 'Conceptual' ? 'var(--c-red)' : m.errorType === 'Calculation' ? 'var(--c-orange)' : 'var(--c-blue)'
+                        const c = m.errorType === 'Conceptual' ? 'var(--c-red)' : m.errorType === 'PYQ Mistake' ? 'var(--c-red)' : m.errorType === 'Calculation' ? 'var(--c-orange)' : 'var(--c-blue)'
                         const dc = m.difficulty === 'HARD' ? 'var(--c-red)' : m.difficulty === 'MEDIUM' ? 'var(--c-orange)' : 'var(--c-green)'
                         const db = m.difficulty === 'HARD' ? 'rgba(239,68,68,0.1)' : m.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)'
                         return (
-                          <tr key={m.id} className="transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]" style={{ borderTop: '1px solid var(--c-border-card)' }}>
-                            <td className="px-5 py-3.5"><span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>{m.chapterName}</span></td>
+                          <tr key={m.id} className={`transition-colors ${m.pyqMistake ? 'cursor-pointer' : ''} hover:bg-black/[0.02] dark:hover:bg-white/[0.03]`}
+                            style={{ borderTop: '1px solid var(--c-border-card)' }}
+                            onClick={() => {
+                              if (m.pyqMistake) {
+                                sessionStorage.setItem('pyq_navigate_mistake', JSON.stringify({ subject: m.subject, chapterName: m.chapterName, question: m.question }))
+                                router.push('/pyq')
+                              }
+                            }}>
+                            <td className="px-5 py-3.5">
+                              <span className="text-sm font-medium" style={{ color: 'var(--c-text)' }}>{m.chapterName}</span>
+                              {m.pyqMistake && <span className="text-[9px] ml-1.5 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(35,131,226,0.1)', color: 'var(--c-blue)' }}>Click to review</span>}
+                            </td>
                             <td className="px-5 py-3.5"><span className="text-[11px] font-medium" style={{ color: SUBJECT_COLORS[m.subject] }}>{SUBJECT_LABELS[m.subject]}</span></td>
                             <td className="px-5 py-3.5"><span className="flex items-center gap-1 text-xs" style={{ color: c }}><AlertCircle size={12} /> {m.errorType}</span></td>
                             <td className="px-5 py-3.5"><span className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: db, color: dc, border: `1px solid ${dc}20` }}>{m.difficulty}</span></td>
                             <td className="px-5 py-3.5 text-right">
-                              <button className="text-[11px] font-medium px-3 py-1 rounded-[40px] transition-all hover:opacity-80" style={{ background: 'var(--c-tag)', color: 'var(--c-blue)' }}
-                                onClick={() => incrementRevision(allChaptersRaw.find(c => c.chapter.name === m.chapterName)?.chapter.id || '')}>Review</button>
+                              {m.pyqMistake ? (
+                                <span className="text-[10px]" style={{ color: 'var(--c-caption)' }}>Click row</span>
+                              ) : (
+                                <button className="text-[11px] font-medium px-3 py-1 rounded-[40px] transition-all hover:opacity-80" style={{ background: 'var(--c-tag)', color: 'var(--c-blue)' }}
+                                  onClick={(e) => { e.stopPropagation(); incrementRevision(allChaptersRaw.find(c => c.chapter.name === m.chapterName)?.chapter.id || '') }}>Review</button>
+                              )}
                             </td>
                           </tr>
                         )

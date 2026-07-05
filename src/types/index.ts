@@ -312,6 +312,7 @@ export interface PYQAttempt {
   timeTaken?: number
   topic?: string
   mockTestId?: string
+  notes?: string
 }
 
 export interface MockTestResult {

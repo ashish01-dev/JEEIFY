@@ -138,6 +138,25 @@ export default function MockTestPage() {
 
     await recordMockResult(result)
 
+    /* Auto-log to test logger */
+    try {
+      const subjSet = new Set(questions.map(q => q.subject))
+      const subjs = Array.from(subjSet)
+      const chapterSet = new Set(questions.map(q => q.chapterName))
+      await db.tests.add({
+        id: `mocktest_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        date: result.attemptedAt.slice(0, 10),
+        subject: subjs[0] || 'physics',
+        subjects: subjs,
+        chapters: Array.from(chapterSet),
+        score: correct.length * 4,
+        total: total * 4,
+        accuracy: result.accuracy,
+        timeTaken: result.timeTaken,
+        notes: `Mock:${id}:${result.id}:${def?.name || ''}`,
+      })
+    } catch {}
+
     /* Also log to local storage for results page */
     sessionStorage.setItem('mock_result_' + id, JSON.stringify({ ...result, questions }))
 
@@ -186,7 +205,7 @@ export default function MockTestPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 md:px-6 py-3 border-b shrink-0" style={{ background: 'var(--c-card)', borderColor: 'var(--c-border)' }}>
         <div className="flex items-center gap-3 min-w-0">
-          <button onClick={() => router.push('/pyq')} className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.1] shrink-0" style={{ color: 'var(--c-text-secondary)' }}>
+          <button onClick={() => { if (window.history.length > 1) router.back(); else window.close() }} className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:bg-black/[0.05] dark:hover:bg-white/[0.1] shrink-0" style={{ color: 'var(--c-text-secondary)' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5m7-7-7 7 7 7"/></svg>
           </button>
           <div className="min-w-0">
@@ -207,10 +226,28 @@ export default function MockTestPage() {
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Question palette - left sidebar */}
+          {/* Question palette - left sidebar */}
         <div className="hidden md:flex flex-col w-[200px] lg:w-[220px] shrink-0 border-r overflow-y-auto py-3" style={{ borderColor: 'var(--c-border)', background: 'var(--c-card)' }}>
           <div className="px-3 mb-3">
-            <p className="text-[11px] font-medium" style={{ color: 'var(--c-caption)' }}>Question Palette</p>
+            <p className="text-[11px] font-medium mb-2" style={{ color: 'var(--c-caption)' }}>Question Palette</p>
+            {/* Subject jump buttons */}
+            <div className="flex gap-1 mb-2">
+              {(['physics', 'chemistry', 'maths'] as const).map(sub => {
+                const firstIdx = questions.findIndex(q => q.subject === sub)
+                if (firstIdx === -1) return null
+                return (
+                  <button key={sub} onClick={() => setCurrentIdx(firstIdx)}
+                    className="flex-1 text-[9px] font-semibold py-1 rounded-[6px] transition-all active:scale-95"
+                    style={{
+                      background: questions[currentIdx]?.subject === sub ? 'rgba(35,131,226,0.12)' : 'var(--c-tag)',
+                      color: questions[currentIdx]?.subject === sub ? 'var(--c-blue)' : 'var(--c-caption)',
+                      border: `1px solid ${questions[currentIdx]?.subject === sub ? 'var(--c-blue)' : 'transparent'}`,
+                    }}>
+                    {sub === 'physics' ? 'Phy' : sub === 'chemistry' ? 'Chem' : 'Maths'}
+                  </button>
+                )
+              })}
+            </div>
           </div>
           <div className="grid grid-cols-5 gap-1.5 px-3">
             {questions.map((q, i) => {
