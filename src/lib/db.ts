@@ -23,7 +23,7 @@ export class JeeDatabase extends Dexie {
 
   constructor() {
     super('JEE2027Tracker')
-    this.version(8).stores({
+    this.version(9).stores({
       progress: '&chapterId',
       timetable: '&id',
       tests: '&id, date, subject',

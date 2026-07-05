@@ -81,13 +81,10 @@ Complete JEEIFY with AI chat via OpenRouter, guided tour onboarding, polished fe
 - Tour `data-tour` targets moved to always-visible elements to prevent tour from hanging on hidden elements
 
 ## Next Steps
-1. Setup dev server and verify all new pages render correctly
-2. Test gamification streak calculation + achievement unlocks
-3. Test PYQ answer recording and bookmark sync across devices
-4. Test backlog add/clear/remove flow
-5. Verify tour navigates through all 16 steps correctly
-6. Verify BetaPopup X button dismisses without navigating
-7. Consider adding study room / live collaboration features as next major feature
+1. Seed Supabase `pyq_questions` table via `POST /api/pyq-questions` with `Authorization: Bearer <CRON_SECRET>` to enable cloud storage
+2. Verify mobile sidebar works across all app pages (dashboard, syllabus, progress, settings, etc.)
+3. Test onboarding → tour flow: Google sign-in triggers tour, email confirmation callback works end-to-end
+4. Add gamification XP for PYQ attempts (currently logged but not rewarded with XP)
 
 ## Critical Context
 - `OPENROUTER_API_KEY` validated and working
@@ -98,7 +95,15 @@ Complete JEEIFY with AI chat via OpenRouter, guided tour onboarding, polished fe
 - DB version 8 with tables: `backlog`, `pyqAttempts`, `studySessions`
 - Gamification store uses `db.settings.get('gamification')` for persistence
 - 10 achievements: `first_chapter`, `ten_chapters`, `fifty_chapters`, `seven_day_streak`, `thirty_day_streak`, `hundred_pyq`, `first_test`, `ninety_plus`, `hundred_hours`, `first_revision`
-- Build passes with 0 errors
+- `hooks/useCloudQuestions.ts`: cloud-backed PYQ fetching with local fallback, shows local data immediately then overwrites with cloud data
+- PYQ dataset expanded from 124 → 904 questions: Physics 247, Chemistry 325, Maths 208 (all chapters covered)
+- `scripts/generate-pyqs.mjs`: generator that produces realistic JEE-style questions from 200+ templates per subject
+- `src/data/generated-pyqs.ts`: 780 new PYQ entries integrated into main dataset via import
+- Mock tests updated: 3 new mock tests for "New Questions Practice" per subject, subject tests expanded to 40 questions
+- PYQ dataset expanded from 124 → 904 questions: Physics 247, Chemistry 325, Maths 208 (all chapters covered)
+- `scripts/generate-pyqs.mjs`: generator that produces realistic JEE-style questions from 200+ templates per subject
+- `src/data/generated-pyqs.ts`: 780 new PYQ entries integrated into main dataset via import
+- Mock tests updated: 3 new mock tests for "New Questions Practice" per subject, subject tests expanded to 40 questions
 - `BetaPopup` has `onClose` (optional, dismiss-only) and `onAcknowledge` (required, dismiss+action) props
 - Tour `data-tour` targets must always be on visible elements — hidden/conditional elements cause the tour to hang
 
@@ -130,3 +135,8 @@ Complete JEEIFY with AI chat via OpenRouter, guided tour onboarding, polished fe
 - `src/store/backlogStore.ts`: Backlog CRUD
 - `src/store/pyqStore.ts`: PYQ attempts, bookmark, stats
 - `src/store/settingsStore.ts`: Backlog reminder defaults
+- `src/data/pyqs.ts`: Main PYQ dataset (904 questions: 247 Physics, 325 Chemistry, 208 Maths)
+- `src/data/generated-pyqs.ts`: 780 auto-generated PYQ entries imported by pyqs.ts
+- `scripts/generate-pyqs.mjs`: Generator for realistic JEE-style PYQ questions using 200+ templates per subject
+- `src/hooks/useCloudQuestions.ts`: Cloud-backed fetch with immediate local fallback
+- `src/app/api/pyq-questions/route.ts`: GET (Supabase + local fallback) + POST (seed) API

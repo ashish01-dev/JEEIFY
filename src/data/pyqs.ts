@@ -1,4 +1,5 @@
 import type { Subject } from '@/types'
+import { PHYSICS_PYQS_NEW, CHEMISTRY_PYQS_NEW, MATHS_PYQS_NEW, ALL_PYQS_NEW } from './generated-pyqs'
 
 export interface PYQEntry {
   id: string
@@ -295,7 +296,10 @@ export interface MockTestDef {
 }
 
 /* All PYQs combined */
-export const ALL_PYQS: PYQEntry[] = [...PHYSICS_PYQS, ...CHEMISTRY_PYQS, ...MATHS_PYQS]
+export const ALL_PYQS: PYQEntry[] = [...PHYSICS_PYQS, ...CHEMISTRY_PYQS, ...MATHS_PYQS, ...PHYSICS_PYQS_NEW, ...CHEMISTRY_PYQS_NEW, ...MATHS_PYQS_NEW]
+
+/* All new PYQs combined (for mock tests targeting new data) */
+export const ALL_NEW_PYQS: PYQEntry[] = ALL_PYQS_NEW
 
 /* Get by subject */
 export function getPYQsBySubject(subject: Subject): PYQEntry[] {
@@ -327,7 +331,7 @@ export const MOCK_TESTS: MockTestDef[] = [
     year: 2024,
     session: 'Jan',
     durationMinutes: 180,
-    questionIds: ALL_PYQS.filter(q => q.year === 2024 && q.session.includes('Jan')).map(q => q.id),
+    questionIds: ALL_PYQS.filter(q => q.year === 2024 && q.session.includes('Jan')).map(q => q.id).slice(0, 30),
   },
   {
     id: 'mock-2024-apr',
@@ -335,7 +339,7 @@ export const MOCK_TESTS: MockTestDef[] = [
     year: 2024,
     session: 'Apr',
     durationMinutes: 180,
-    questionIds: ALL_PYQS.filter(q => q.year === 2024 && q.session.includes('Apr')).map(q => q.id),
+    questionIds: ALL_PYQS.filter(q => q.year === 2024 && q.session.includes('Apr')).map(q => q.id).slice(0, 30),
   },
   {
     id: 'mock-2025-jan',
@@ -343,7 +347,7 @@ export const MOCK_TESTS: MockTestDef[] = [
     year: 2025,
     session: 'Jan',
     durationMinutes: 180,
-    questionIds: ALL_PYQS.filter(q => q.year === 2025 && q.session.includes('Jan')).map(q => q.id),
+    questionIds: ALL_PYQS.filter(q => q.year === 2025 && q.session.includes('Jan')).map(q => q.id).slice(0, 30),
   },
   {
     id: 'mock-mixed-1',
@@ -362,12 +366,36 @@ export const MOCK_TESTS: MockTestDef[] = [
     questionIds: ALL_PYQS.slice(30, 60).map(q => q.id),
   },
   {
+    id: 'mock-new-1',
+    name: 'New Questions Practice — Physics',
+    year: 2026,
+    session: 'Practice',
+    durationMinutes: 60,
+    questionIds: PHYSICS_PYQS_NEW.slice(0, 30).map(q => q.id),
+  },
+  {
+    id: 'mock-new-2',
+    name: 'New Questions Practice — Chemistry',
+    year: 2026,
+    session: 'Practice',
+    durationMinutes: 60,
+    questionIds: CHEMISTRY_PYQS_NEW.slice(0, 30).map(q => q.id),
+  },
+  {
+    id: 'mock-new-3',
+    name: 'New Questions Practice — Maths',
+    year: 2026,
+    session: 'Practice',
+    durationMinutes: 60,
+    questionIds: MATHS_PYQS_NEW.slice(0, 30).map(q => q.id),
+  },
+  {
     id: 'mock-subject-physics',
     name: 'Physics Subject Test',
     year: 2026,
     session: 'Practice',
     durationMinutes: 60,
-    questionIds: PHYSICS_PYQS.map(q => q.id),
+    questionIds: [...PHYSICS_PYQS, ...PHYSICS_PYQS_NEW].map(q => q.id).slice(0, 40),
   },
   {
     id: 'mock-subject-chemistry',
@@ -375,7 +403,7 @@ export const MOCK_TESTS: MockTestDef[] = [
     year: 2026,
     session: 'Practice',
     durationMinutes: 60,
-    questionIds: CHEMISTRY_PYQS.map(q => q.id),
+    questionIds: [...CHEMISTRY_PYQS, ...CHEMISTRY_PYQS_NEW].map(q => q.id).slice(0, 40),
   },
   {
     id: 'mock-subject-maths',
@@ -383,6 +411,6 @@ export const MOCK_TESTS: MockTestDef[] = [
     year: 2026,
     session: 'Practice',
     durationMinutes: 60,
-    questionIds: MATHS_PYQS.map(q => q.id),
+    questionIds: [...MATHS_PYQS, ...MATHS_PYQS_NEW].map(q => q.id).slice(0, 40),
   },
 ]

@@ -5,7 +5,8 @@ import Sidebar from '@/components/layout/Sidebar'
 import TopBar from '@/components/layout/TopBar'
 import MobileBottomNav from '@/components/layout/MobileBottomNav'
 import { usePYQStore } from '@/store/pyqStore'
-import { ALL_PYQS, getPYQsBySubject, getPYQsByChapter, MOCK_TESTS, CHAPTER_NAMES } from '@/data/pyqs'
+import { useCloudQuestions, useCloudMockQuestions } from '@/hooks/useCloudQuestions'
+import { ALL_PYQS, getPYQsByChapter, MOCK_TESTS, CHAPTER_NAMES } from '@/data/pyqs'
 import syllabusData from '@/data/syllabus.json'
 import type { Subject, PYQAttempt } from '@/types'
 import { formatDate } from '@/lib/utils'
@@ -23,7 +24,7 @@ const SUBJECT_META: Record<Subject, { emoji: string; color: string; label: strin
 type Tab = 'practice' | 'mock' | 'analytics'
 
 export default function PYQPage() {
-  const { attempts, mockResults, loaded, recordAttempt, recordMockResult, toggleBookmark, getStats, getSubjectStats, getChapterwiseCount, getMockStats, getRecentMistakes } = usePYQStore()
+  const { attempts, mockResults, loaded, load, recordAttempt, recordMockResult, toggleBookmark, getStats, getSubjectStats, getChapterwiseCount, getMockStats, getRecentMistakes } = usePYQStore()
   const [tab, setTab] = useState<Tab>('practice')
   const [subject, setSubject] = useState<Subject>('physics')
   const [chapterId, setChapterId] = useState('')
@@ -57,19 +58,15 @@ export default function PYQPage() {
     if (!chapterId && chapters.length > 0) setChapterId(chapters[0].id)
   }, [chapters, chapterId])
 
+  useEffect(() => { load() }, [load])
+
   const currentChapter = chapters.find(c => c.id === chapterId)
-  const questions = useMemo(() => {
-    if (tab !== 'practice' || !chapterId) return []
-    return getPYQsByChapter(chapterId)
-  }, [chapterId, tab])
+  const { questions, source: cloudSource } = useCloudQuestions(tab === 'practice' ? subject : undefined, tab === 'practice' ? chapterId : undefined)
   const currentQ = questions[currentIdx]
 
-  // Mock test questions
+  // Mock test questions — use cloud-backed hook
   const currentMock = useMemo(() => MOCK_TESTS.find(m => m.id === mockTestId), [mockTestId])
-  const mockQuestions = useMemo(() => {
-    if (!currentMock) return []
-    return currentMock.questionIds.map(id => ALL_PYQS.find(q => q.id === id)).filter(Boolean) as typeof ALL_PYQS
-  }, [currentMock])
+  const { questions: mockQuestions } = useCloudMockQuestions(mockTestId)
 
   const stats = getStats()
   const subjectStats = getSubjectStats(subject)
