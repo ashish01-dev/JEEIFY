@@ -98,14 +98,25 @@ export default function LandingPage() {
           transition={{ duration: 0.4, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="flex items-center gap-4 mt-8 flex-wrap justify-center"
         >
-          <Link href="/auth?mode=signup" className="btn-primary">
-            <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </span>
-            Start Free
-          </Link>
+          {user ? (
+            <Link href="/dashboard" className="btn-primary">
+              <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </span>
+              Start Now
+            </Link>
+          ) : (
+            <Link href="/auth?mode=signup" className="btn-primary">
+              <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </span>
+              Start Free
+            </Link>
+          )}
           <a href="#features" className="btn-secondary">Explore</a>
         </motion.div>
       </section>
@@ -201,14 +212,25 @@ export default function LandingPage() {
         <p className="text-[14px] mb-8 max-w-md mx-auto" style={{ color: 'var(--c-text-secondary)', lineHeight: 1.7 }}>
           Free. No credit card. Just your Google account and the determination to succeed.
         </p>
-        <Link href="/auth?mode=signup" className="btn-primary">
-          <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </span>
-          Get Started Free
-        </Link>
+        {user ? (
+          <Link href="/dashboard" className="btn-primary">
+            <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </span>
+            Go to Dashboard
+          </Link>
+        ) : (
+          <Link href="/auth?mode=signup" className="btn-primary">
+            <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </span>
+            Get Started Free
+          </Link>
+        )}
       </section>
 
       {/* Footer is rendered by layout.tsx */}
